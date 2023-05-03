@@ -1,0 +1,42 @@
+[
+  {
+    "Code": "Arpana",
+    "Label": "Arpana",
+    "Role": "Time"
+  },
+  {
+    "Code": "EgurPilota",
+    "Label": "Egur Pilota",
+    "Role": "Time"
+  },
+  {
+    "Code": "Toka",
+    "Label": "Toka",
+    "Role": "Point"
+  },
+  {
+    "Code": "LastoAltxatzeaPoint",
+    "Label": "Lasto Altxatzea",
+    "Role": "Point"
+  },
+  {
+    "Code": "LastoAltxatzeaTime",
+    "Label": "Lasto Altxatzea",
+    "Role": "Time"
+  },
+  {
+    "Code": "SokaTira",
+    "Label": "Soka Tira",
+    "Role": "Point"
+  },
+    {
+    "Code": "BuskailBiltzea",
+    "Label": "Buskail Biltzea",
+    "Role": "Time"
+  },
+    {
+    "Code": "BonetaBotatzea",
+    "Label": "Boneta Botatzea",
+    "Role": "Point"
+  }
+]
