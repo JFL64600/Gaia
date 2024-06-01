@@ -11,6 +11,7 @@ namespace Gaia.Forms
         #region Declarations
         private const string JSONGamesFile = "games.json";
         private const string JSONTeamsFile = "teams.json";
+        private const string TimeMax = "100:59:99";
         private string _eventPath;
         private List<Game> _games;
         private List<Team> _teams;
@@ -178,10 +179,10 @@ namespace Gaia.Forms
                 int previous = 0;
                 foreach (int team in from c in results orderby c.Value.Points descending select c.Key)
                 {
-                    if (results[team].Points == 0)
-                    {
-                        break;
-                    }
+                    //if (results[team].Points == 0)
+                    //{
+                    //    break;
+                    //}
                     if (results[team].Points != previous)
                     {
                         i += 1;
@@ -194,18 +195,19 @@ namespace Gaia.Forms
             else
             {
                 string previous = string.Empty;
-                foreach (int team in from c in results orderby c.Value.Time select c.Key)
+                foreach (int team in from c in results orderby (string.IsNullOrWhiteSpace(c.Value.Time) ? TimeMax : c.Value.Time) select c.Key)
                 {
+                    string time = results[team].Time;
                     if (string.IsNullOrWhiteSpace(results[team].Time))
                     {
-                        break;
+                        time = TimeMax;
                     }
-                    if (results[team].Time != previous)
+                    if (time != previous)
                     {
                         i += 1;
                     }
                     results[team].Position = i;
-                    previous = results[team].Time;
+                    previous = time;
                     SetPosition(game.Code, team, results[team].Position);
                 }
             }
@@ -217,7 +219,7 @@ namespace Gaia.Forms
             if (!string.IsNullOrWhiteSpace(label.Text))
             {
                 separator = Environment.NewLine;
-                label.Location = new Point(label.Location.X, lFirst.Location.Y - 21);
+                label.Location = new Point(label.Location.X, label.Location.Y - 21);
             }
             label.Text += string.Concat(separator, label2Add);
         }

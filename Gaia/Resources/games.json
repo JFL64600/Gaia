@@ -16,12 +16,12 @@
   },
   {
     "Code": "LastoAltxatzeaPoint",
-    "Label": "Lasto Altxatzea",
+    "Label": "Lasto Altxatzea (Point)",
     "Role": "Point"
   },
   {
     "Code": "LastoAltxatzeaTime",
-    "Label": "Lasto Altxatzea",
+    "Label": "Lasto Altxatzea (Temps)",
     "Role": "Time"
   },
   {

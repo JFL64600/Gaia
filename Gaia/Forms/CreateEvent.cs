@@ -21,33 +21,33 @@ namespace Gaia.Forms
             {
                 lvGames.Items.Add(game.Code, game.Label, 0);
             }
-            test();
+            SetButtons();
         }
-
         private void lvGames_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            test();
+            SetButtons();
         }
-
+        private void lvSelectedGames_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            SetButtons();
+        }
         private void bGameSelect_Click(object sender, EventArgs e)
         {
-            //Dim toto As String = ""
-            //If String.IsNullOrWhiteSpace(toto) Then
-
-            //End If
-            //For Each si As ListViewItem In lvGames.SelectedItems
-            //    si.EnsureVisible()
-            //    MsgBox("test")
-            //    Dim titi As String = ""
-            //    If String.IsNullOrWhiteSpace(titi) Then
-
-            //    End If
-            //Next
+            if (lvGames.SelectedItems.Count > 0)
+            {
+                lvSelectedGames.Items.Add(lvGames.SelectedItems[0].Name, lvGames.SelectedItems[0].Text, 0);
+                lvGames.Items.Remove(lvGames.SelectedItems[0]);
+            }
+            SetButtons();
         }
-
         private void bGameUnselect_Click(object sender, EventArgs e)
         {
-
+            if (lvSelectedGames.SelectedItems.Count > 0)
+            {
+                lvGames.Items.Add(lvSelectedGames.SelectedItems[0].Name, lvSelectedGames.SelectedItems[0].Text, 0);
+                lvSelectedGames.Items.Remove(lvSelectedGames.SelectedItems[0]);
+            }
+            SetButtons();
         }
         #endregion
         public CreateEvent()
@@ -55,10 +55,11 @@ namespace Gaia.Forms
             InitializeComponent();
         }
         #region Privates
-        private void test()
+        private void SetButtons()
         {
             bGameSelect.Enabled = lvGames.SelectedItems != null && lvGames.SelectedItems.Count > 0;
             bGameUnselect.Enabled = lvSelectedGames.SelectedItems != null && lvSelectedGames.SelectedItems.Count > 0;
+            //bUp.Enabled = bGameUnselect.Enabled && lvSelectedGames.SelectedItems[0].Index > 0;
         }
         #endregion
     }

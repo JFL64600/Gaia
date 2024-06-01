@@ -48,6 +48,7 @@
             // bValid
             // 
             bValid.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            bValid.Enabled = false;
             bValid.Image = (Image)resources.GetObject("bValid.Image");
             bValid.Name = "bValid";
             bValid.Size = new Size(20, 20);
