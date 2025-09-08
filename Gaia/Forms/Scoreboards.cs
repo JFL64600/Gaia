@@ -179,7 +179,7 @@ namespace Gaia.Forms
                         {
                             Dock = DockStyle.Fill,
                             Game = game,
-                            BackColor = (column % 2 == 0) ? Color.AliceBlue : Color.Aquamarine
+                            //BackColor = (column % 2 == 0) ? Color.AliceBlue : Color.Aquamarine
                         };
                         rotationGame.Teams.Add(_teams.Find(c => c.Number == team).Name);
                         score.SetTeam(_teams.Find(c => c.Number == team));
