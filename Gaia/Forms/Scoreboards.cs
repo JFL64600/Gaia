@@ -1,8 +1,6 @@
 ﻿using Gaia.Classes;
 using Gaia.Controls;
-//using Microsoft.VisualBasic;
 using Newtonsoft.Json;
-using System.Windows.Forms;
 
 namespace Gaia.Forms
 {
@@ -15,6 +13,7 @@ namespace Gaia.Forms
         private string _eventPath;
         private List<Game> _games;
         private List<Team> _teams;
+        private readonly List<Rotation> _rotations = [];
         #endregion
         #region Properties
         public string Root { get; set; } = string.Empty;
@@ -25,7 +24,7 @@ namespace Gaia.Forms
         {
             _eventPath = Path.Combine(Root, Event);
             Text += $" - {Event}";
-            _games = JsonConvert.DeserializeObject<List<Game>>(Tools.ReadFile(Path.Combine(Root, JSONGamesFile)));
+            _games = JsonConvert.DeserializeObject<List<Game>>(Tools.ReadFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", JSONGamesFile)));
             _teams = JsonConvert.DeserializeObject<List<Team>>(Tools.ReadFile(Path.Combine(_eventPath, JSONTeamsFile)));
             List<PlayedGame> playedGames = JsonConvert.DeserializeObject<List<PlayedGame>>(Tools.ReadFile(Path.Combine(_eventPath, JSONGamesFile)));
             int columnCount = Tools.GetRotationCount(playedGames);
@@ -34,8 +33,9 @@ namespace Gaia.Forms
                 AddTabPage(columnCount, _games.Find(c => c.Code == playedGame.Game), playedGame.Rotations);
             }
             tcJeux.SelectedIndex = 0;
+            //using StreamWriter sw = new(Path.Combine(_eventPath, "rotations.hson"));
+            //sw.Write(JsonConvert.SerializeObject(_rotations, Formatting.Indented));
         }
-
         private void tpRanking_Paint(object sender, PaintEventArgs e)
         {
             using Graphics graphics = tpRanking.CreateGraphics();
@@ -44,7 +44,6 @@ namespace Gaia.Forms
             graphics.DrawRectangle(pen, new Rectangle(350, 100, 250, 125));
             graphics.DrawRectangle(pen, new Rectangle(600, 175, 250, 50));
         }
-
         private void bSetRanking_Click(object sender, EventArgs e)
         {
             List<Rank> ranks = new();
@@ -152,9 +151,37 @@ namespace Gaia.Forms
                 foreach (List<int> rotation in rotations)
                 {
                     int row = 0;
+                    string rotationName = $"Rotation {column + 1}";
+                    int rotationIndex = _rotations.FindIndex(x => x.Name == rotationName);
+                    RotationGame rotationGame = null;
+                    if (rotationIndex == -1)
+                    {
+                        _rotations.Add(new() { Name = rotationName });
+                        _rotations.Last().Games.Add(new() { Name = game.Label });
+                        rotationGame = _rotations.Last().Games.Last();
+                    }
+                    else
+                    {
+                        int gameIndex = _rotations[rotationIndex].Games.FindIndex(x => x.Name == game.Label);
+                        if (gameIndex == -1)
+                        {
+                            _rotations[rotationIndex].Games.Add(new() { Name = game.Label });
+                            rotationGame = _rotations[rotationIndex].Games.Last();
+                        }
+                        else
+                        {
+                            rotationGame = _rotations[rotationIndex].Games[gameIndex];
+                        }
+                    }
                     foreach (int team in rotation)
                     {
-                        Score score = new() { Dock = DockStyle.Fill, Game = game };
+                        Score score = new()
+                        {
+                            Dock = DockStyle.Fill,
+                            Game = game,
+                            BackColor = (column % 2 == 0) ? Color.AliceBlue : Color.Aquamarine
+                        };
+                        rotationGame.Teams.Add(_teams.Find(c => c.Number == team).Name);
                         score.SetTeam(_teams.Find(c => c.Number == team));
                         score.ValidClick += ValidClickDelegate;
                         tlp.Controls.Add(score, column, row);
@@ -165,7 +192,6 @@ namespace Gaia.Forms
                 tcJeux.TabPages.Insert(tcJeux.TabPages.Count - 1, tp);
             }
         }
-
         private void SetRanking(Game game)
         {
             Dictionary<int, Result> results = new();
@@ -212,7 +238,6 @@ namespace Gaia.Forms
                 }
             }
         }
-
         private void SetRankingLabel(Label label, string label2Add)
         {
             string separator = string.Empty;
@@ -223,7 +248,6 @@ namespace Gaia.Forms
             }
             label.Text += string.Concat(separator, label2Add);
         }
-
         private void SetPosition(string game, int team, int position)
         {
             string tabPageName = $"tp{game}";

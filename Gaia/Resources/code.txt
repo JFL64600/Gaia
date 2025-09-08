@@ -1,0 +1,144 @@
+﻿ else if (@event.StartsWith("**"))
+            {
+                int[] teams = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+                List<RotationGame> rotationGames = new() {
+                    new RotationGame() { Name = "LastoAltxatzeaTime", Teams = teams },
+                    new RotationGame() { Name = "Arpana", Teams = teams },
+                    new RotationGame() { Name = "BuskailBiltzea", Teams = teams },
+                    new RotationGame() { Name = "EgurPilota", Teams = teams },
+                    new RotationGame() { Name = "Toka", Teams = teams },
+                    new RotationGame() { Name = "BonetaBotatzea", Teams = teams },
+                    new RotationGame() { Name = "SokaTira", Teams = teams },
+                };
+                foreach (RotationGame rotationGame in rotationGames)
+                {
+                    for (int i = 1; i <= 7; i++)
+                    {
+                        if (rotationGame.Rotations is null)
+                        {
+                            rotationGame.Rotations = new();
+                        }
+                        List<int> rotation = new();
+                        for (int j = 1; j <= 4; j++)
+                        {
+                            int teamNumber = rotationGame.Teams[0];
+                            rotation.Add(teamNumber);
+                            rotationGame.Teams = rotationGame.Teams.Where((source, index) => index != 0).ToArray();
+                        }
+                        rotationGame.Rotations.Add(rotation);
+                    }
+                }
+                using StreamWriter sw = new(Path.Combine(choose.Root, "test.json"));
+                sw.Write(JsonConvert.SerializeObject(rotationGames, Formatting.Indented));
+                //for (int i = 1; i <= 7; i++)
+                //{
+                //    string rotationName = $"Rotation{i}";
+                //    Rotation rotation = new() { Name = $"Rotation{i}", Teams = teams };
+                //    string mes = string.Empty;
+                //    foreach (RotationGame rotationGame in rotationGames)
+                //    {
+                //        int[] pTeams = { };
+                //        if (i > 1)
+                //        {
+                //            pTeams = rotation.Teams.Except(rotationGame.Teams).ToArray();
+                //            rotation.Teams = rotation.Teams.Where((source, index) => rotationGame.Teams.Contains(rotation.Teams[index])).ToArray();
+                //        }
+                //        mes += $"{rotationGame.Name}\r\n[";
+                //        for (int j = 0; j < 4; j++)
+                //        {
+                //            if (rotation.Teams.Length == 0)
+                //            {
+                //                continue;
+                //            }
+                //            int teamNumber = rotation.Teams[0];
+                //            mes += $"{teamNumber}, ";
+                //            rotation.Teams = rotation.Teams.Where((source, index) => index != 0).ToArray();
+                //            rotationGame.Teams = rotationGame.Teams.Where((source, index) => rotationGame.Teams[index] != teamNumber).ToArray();
+                //        }
+                //        mes += "]\r\n";
+                //        if (i > 1)
+                //        {
+                //            rotation.Teams = rotation.Teams.Concat(pTeams).ToArray();
+                //        }
+                //    }
+                //    MessageBox.Show(mes);
+                //}
+            }
+
+
+ //'Dim teams As New List(Of Tools.Team)
+            //'For i As Integer = 1 To 28
+            //'    teams.Add(New Tools.Team With {.Number = i,
+            //'                                   .Results = New List(Of Tools.Result) From {New Tools.Result With {.Game = "SokaTira"}, New Tools.Result With {.Game = "BonetaBotatzea"},
+            //'                                                                              New Tools.Result With {.Game = "Toka"}, New Tools.Result With {.Game = "LastoAltxatzeaTime"},
+            //'                                                                              New Tools.Result With {.Game = "Arpana"}, New Tools.Result With {.Game = "BuskailBiltzea"},
+            //'                                                                              New Tools.Result With {.Game = "EgurPilota"}}})
+            //'Next
+            //'Using sw As New IO.StreamWriter("C:\Temp\teams.json")
+            //'    sw.Write(JsonConvert.SerializeObject(teams, Formatting.Indented))
+            //'End Using
+
+            //            teams = [1, 2, ..., 28]  # Liste des équipes
+            //rotations = []           # Liste des 7 rotations
+            //encounters = { team: set() for team in teams}  # Historique des rencontres par équipe
+
+            //        for rotation_index in range(7):
+
+            //            available_teams = set(teams)
+
+            //            rotation = []  # Liste des 7 groupes pour cette rotation
+
+            //while available_teams:
+            //    # Sélectionner un groupe de 4 équipes qui ne se sont pas encore rencontrées
+            //    group = find_valid_group(available_teams, encounters)
+            //    if not group:
+            //            raise Exception("Impossible de générer une rotation sans doublon")
+
+            //    rotation.append(group)
+
+            //    # Mettre à jour les rencontres
+            //    for team in group:
+            //        available_teams.remove(team)
+            //        encounters[team].update(set(group) - { team})
+
+            //rotations.append(rotation)
+
+            //        def find_valid_group(available_teams, encounters):
+            //from itertools import combinations
+
+            //for group in combinations(available_teams, 4):
+            //    valid = True
+            //    for i in range(4):
+            //        for j in range(i + 1, 4):
+            //            if group[j] in encounters[group[i]]:
+            //                valid = False
+            //                break
+            //        if not valid:
+            //            break
+            //    if valid:
+            //        return group
+            //return None
+
+
+
+
+
+
+namespace Gaia.Classes
+{
+    public class Rotation
+    {
+        #region Properties
+        public string Name { get; set; } = string.Empty;
+        public int[] Teams { get; set; } = Array.Empty<int>();
+        #endregion
+    }
+    public class RotationGame
+    {
+        #region Properties
+        public string Name { get; set; } = string.Empty;
+        public int[] Teams { get; set; } = Array.Empty<int>();
+        public List<List<int>> Rotations { get; set; } = null;
+        #endregion
+    }
+}

@@ -15,38 +15,24 @@ namespace Gaia
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
             Application.EnableVisualStyles();
-            DialogResult dr = DialogResult.None;
-            string root = ConfigurationManager.AppSettings.Get("root");
-            string @event = string.Empty;
-            using Choose choose = new() { Root = root };
+            using Choose choose = new() { Root = ConfigurationManager.AppSettings.Get("root") };
             if (choose.ShowDialog() != DialogResult.OK)
             {
                 Environment.Exit(1001);
             }
-            @event = choose.GetEvent();
+            string @event = choose.GetEvent();
             if (string.IsNullOrWhiteSpace(@event))
             {
                 Environment.Exit(1002);
             }
             if (@event.StartsWith("--"))
             {
-                Application.Run(new CreateEvent { Root = root });
+                Application.Run(new CreateEvent { Root = choose.Root });
             }
             else
             {
-                Application.Run(new Scoreboards { Root = root, Event = @event });
+                Application.Run(new Scoreboards { Root = choose.Root, Event = @event });
             }
-            //'Dim teams As New List(Of Tools.Team)
-            //'For i As Integer = 1 To 28
-            //'    teams.Add(New Tools.Team With {.Number = i,
-            //'                                   .Results = New List(Of Tools.Result) From {New Tools.Result With {.Game = "SokaTira"}, New Tools.Result With {.Game = "BonetaBotatzea"},
-            //'                                                                              New Tools.Result With {.Game = "Toka"}, New Tools.Result With {.Game = "LastoAltxatzeaTime"},
-            //'                                                                              New Tools.Result With {.Game = "Arpana"}, New Tools.Result With {.Game = "BuskailBiltzea"},
-            //'                                                                              New Tools.Result With {.Game = "EgurPilota"}}})
-            //'Next
-            //'Using sw As New IO.StreamWriter("C:\Temp\teams.json")
-            //'    sw.Write(JsonConvert.SerializeObject(teams, Formatting.Indented))
-            //'End Using
         }
     }
 }
