@@ -5,6 +5,26 @@
     "Role": "Time"
   },
   {
+    "Code": "ArpanaSprint",
+    "Label": "Arpana - Sprint",
+    "Role": "Time"
+  },
+  {
+    "Code": "ArpanaEndurance",
+    "Label": "Arpana - Endurance",
+    "Role": "Time"
+  },
+  {
+    "Code": "MailakoAizkoraSprint",
+    "Label": "Mailako Aizkora - Sprint",
+    "Role": "Time"
+  },
+  {
+    "Code": "MailakoAizkoraEndurance",
+    "Label": "Mailako Aizkora - Endurance",
+    "Role": "Time"
+  },
+  {
     "Code": "EgurPilota",
     "Label": "Egur Pilota",
     "Role": "Time"
@@ -29,12 +49,12 @@
     "Label": "Soka Tira",
     "Role": "Point"
   },
-    {
+  {
     "Code": "BuskailBiltzea",
     "Label": "Buskail Biltzea",
     "Role": "Time"
   },
-    {
+  {
     "Code": "BonetaBotatzea",
     "Label": "Boneta Botatzea",
     "Role": "Point"
