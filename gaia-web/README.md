@@ -91,7 +91,15 @@ le mode lecture seule de GaiaRox est une fonctionnalité d'interface, pas une au
 ```powershell
 npm run build
 npm test -- --watch=false
+npm audit
 ```
+
+Exécuter `npm audit` régulièrement, notamment après les mises à jour de dépendances.
+Surveiller en particulier les avis détectés le 14 novembre 2026 dans la chaîne
+Firebase/Firestore, via `@grpc/grpc-js` (`GHSA-m9gg-hp2v-232j` et
+`GHSA-f596-whhp-79r4`). Le rapport signalait la version `1.9.16` et quatre
+occurrences de sévérité élevée. Réévaluer les correctifs compatibles avant toute
+mise à jour ; `npm audit fix --force` proposait une rétrogradation majeure de Firebase.
 
 Sources intégrées : GaiaRox `0d0442ee81d5bdb55baf7983e8604d29c8c8c934` et
 GaiaScores `2e27bc69c4da37071169a8ecdc44ea76757901ba`.
