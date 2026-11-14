@@ -1,0 +1,80 @@
+<section class="events-page" [attr.aria-label]="labels().title">
+  <div class="page-heading">
+    <h1>{{ labels().title }}</h1>
+    @if (canCreate() && !creating()) {
+      <button class="primary-button create-button" type="button" (click)="create.emit()">
+        <span aria-hidden="true">+</span>
+        {{ labels().create }}
+      </button>
+    }
+  </div>
+
+  @if (error(); as error) {
+    <div class="connection-error" role="alert">
+      <strong>{{ labels().error }}</strong>
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  <div class="event-tools">
+    <label class="search-field">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.8" cy="10.8" r="6.8"></circle>
+        <path d="m16 16 4.5 4.5"></path>
+      </svg>
+      <input type="search" autocomplete="off" [attr.aria-label]="labels().search"
+        [placeholder]="labels().search" [value]="query()" (input)="updateQuery($event)" />
+    </label>
+    <span class="event-count">{{ count() }}</span>
+  </div>
+
+  <ng-content />
+
+  @if (loading()) {
+    <div class="empty-state" role="status">
+      <p>{{ labels().loading }}</p>
+    </div>
+  } @else if (filteredEvents().length > 0) {
+    <ul class="event-list" [attr.aria-label]="labels().title">
+      @for (event of filteredEvents(); track event.id) {
+        <li gaia-event-card class="event-item" [name]="event.name"
+          [link]="event.link ?? null" [openLabel]="event.openLabel ?? null"
+          [deleteLabel]="event.deleteLabel ?? null" (remove)="remove.emit(event)"></li>
+      }
+    </ul>
+  } @else if (error()) {
+    <div class="empty-state">
+      <span class="empty-icon" aria-hidden="true">!</span>
+      <h2>{{ labels().error }}</h2>
+    </div>
+  } @else if (query().trim()) {
+    <div class="empty-state">
+      <span class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="10.8" cy="10.8" r="6.8"></circle>
+          <path d="m16 16 4.5 4.5"></path>
+        </svg>
+      </span>
+      <h2>{{ labels().noResults }}</h2>
+      <p>{{ labels().noResultsHint }}</p>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <span class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <rect x="3.5" y="5" width="17" height="16" rx="2.5"></rect>
+          <path d="M7.5 3v4M16.5 3v4M4 9.5h16"></path>
+          <path d="M12 13v5M9.5 15.5h5"></path>
+        </svg>
+      </span>
+      <h2>{{ labels().empty }}</h2>
+      <p>{{ canCreate() ? labels().emptyHint : labels().readonlyEmptyHint }}</p>
+      @if (canCreate() && !creating()) {
+        <button class="secondary-button" type="button" (click)="create.emit()">
+          <span aria-hidden="true">+</span>
+          {{ labels().create }}
+        </button>
+      }
+    </div>
+  }
+</section>

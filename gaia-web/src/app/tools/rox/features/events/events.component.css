@@ -1,0 +1,82 @@
+button {
+  min-width: 7rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: var(--on-accent);
+  background: var(--accent);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+button:disabled {
+  color: var(--disabled-text);
+  background: var(--disabled-bg);
+  cursor: not-allowed;
+}
+
+.secondary {
+  border: 0.125rem solid var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+}
+
+.create-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.create-form {
+  padding: 1rem;
+  border: 0.125rem solid var(--accent);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+input {
+  padding: 0.6rem 0.75rem;
+  border: 0.125rem solid var(--border-strong);
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.resume-toggle {
+  position: relative;
+  min-width: 0;
+  width: 3.25rem;
+  min-height: 0;
+  height: 1.75rem;
+  padding: 0;
+  border: 0.125rem solid var(--accent);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.resume-toggle-thumb {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 0.15s ease;
+}
+
+.resume-toggle[aria-checked='true'] {
+  background: var(--accent);
+}
+
+.resume-toggle[aria-checked='true'] .resume-toggle-thumb {
+  background: var(--on-accent);
+  transform: translateX(1.5rem);
+}

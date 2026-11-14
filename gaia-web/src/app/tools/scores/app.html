@@ -1,0 +1,86 @@
+<div class="app-shell">
+  <header class="gaia-header">
+    <div class="gaia-header-group">
+      <gaia-brand suffix="Scores" />
+    </div>
+
+    <div class="gaia-header-controls">
+      <gaia-preferences />
+    </div>
+  </header>
+
+  <main class="content">
+    <gaia-events-page [events]="eventStore.events()" [creating]="creating()"
+      [loading]="eventStore.loading()" [error]="eventStore.error()"
+      [(query)]="searchTerm" (create)="startCreating()">
+      @if (creating()) {
+        <form class="create-panel" (submit)="createEvent($event)" (keydown.escape)="cancelCreating()">
+          <div class="create-panel-heading">
+            <h2>{{ i18n.t('events.new') }}</h2>
+            <p>{{ i18n.t('events.nameHint') }}</p>
+          </div>
+          <label class="field-label" for="event-name">{{ i18n.t('events.name') }}</label>
+          <input
+            id="event-name"
+            name="eventName"
+            type="text"
+            required
+            autofocus
+            maxlength="80"
+            [disabled]="saving()"
+            [attr.placeholder]="i18n.t('events.namePlaceholder')"
+            [value]="pendingName()"
+            (input)="updatePendingName($event)"
+          />
+          <label class="field-label" for="event-teams">{{ i18n.t('events.teams') }}</label>
+          <input
+            id="event-teams"
+            name="teamCount"
+            type="number"
+            required
+            min="1"
+            max="100"
+            step="1"
+            [disabled]="saving()"
+            [value]="pendingTeamCount()"
+            (input)="updateTeamCount($event)"
+            aria-describedby="teams-hint"
+          />
+          <p class="field-hint" id="teams-hint">{{ i18n.t('events.teamsHint') }}</p>
+          <fieldset class="games-field" [disabled]="saving()">
+            <legend>{{ i18n.t('events.games') }}</legend>
+            <p class="field-hint">{{ i18n.t('events.gamesHint') }}</p>
+            <div class="games-list">
+              @for (game of games(); track game.code) {
+                <label class="game-option">
+                  <input
+                    type="checkbox"
+                    [checked]="pendingGameIds().includes(game.code)"
+                    (change)="toggleGame(game.code)"
+                  />
+                  <span>{{ game.label }}</span>
+                  <span class="game-role">{{ i18n.t(game.role === 'Time' ? 'games.role.time' : 'games.role.point') }}</span>
+                </label>
+              } @empty {
+                <p class="field-hint">{{ i18n.t('events.gamesLoading') }}</p>
+              }
+            </div>
+          </fieldset>
+          <div class="form-actions">
+            <button class="secondary-button" type="button" (click)="cancelCreating()">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button
+              class="primary-button"
+              type="submit"
+              [disabled]="!validEvent() || saving()"
+            >
+              {{ saving() ? i18n.t('events.saving') : i18n.t('common.add') }}
+            </button>
+          </div>
+        </form>
+      }
+
+    </gaia-events-page>
+  </main>
+</div>

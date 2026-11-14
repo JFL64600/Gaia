@@ -1,0 +1,244 @@
+h2,
+p {
+  margin-top: 0;
+}
+
+button {
+  min-width: 7rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: var(--on-accent);
+  background: var(--accent);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+button:disabled {
+  color: var(--disabled-text);
+  background: var(--disabled-bg);
+  cursor: not-allowed;
+}
+
+.chronometer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  align-items: stretch;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chronometer-grid > li {
+  min-width: 0;
+}
+
+.chronometer-card {
+  display: flex;
+  box-sizing: border-box;
+  height: 100%;
+  flex-direction: column;
+  padding: 1.25rem;
+  border: 0.125rem solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: 0 0.25rem 1rem var(--shadow);
+}
+
+.chronometer-card.running {
+  border-color: var(--accent-strong);
+}
+
+.chronometer-card.leaving {
+  animation: flip-out 0.6s ease-in forwards;
+}
+
+@keyframes flip-out {
+  to {
+    opacity: 0;
+    transform: perspective(600px) rotateY(90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chronometer-card.leaving {
+    animation-duration: 0.01s;
+  }
+}
+
+h2 {
+  color: var(--muted);
+  margin-bottom: 0.83rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.time {
+  display: block;
+  margin-block: 1rem;
+  font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
+  font-size: clamp(1.6rem, 5vw, 2.25rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.icon-button {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+}
+
+.add-tile {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 8rem;
+  align-items: center;
+  justify-content: center;
+  border: 0.125rem dashed var(--border-strong);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--accent);
+  font-size: 2rem;
+  min-width: 0;
+  padding: 1.25rem;
+}
+
+.add-tile:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.name-form {
+  display: flex;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 8rem;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  border: 0.125rem solid var(--accent);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.name-form label {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.name-form input {
+  padding: 0.6rem 0.75rem;
+  border: 0.125rem solid var(--border-strong);
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
+.name-form input:focus-visible {
+  border-color: var(--accent);
+  outline: 0.125rem solid var(--accent);
+  outline-offset: 0.125rem;
+}
+
+.name-form input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.name-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.name-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.name-actions button {
+  min-width: 0;
+  flex: 1;
+}
+
+.name-actions .secondary {
+  border: 0.125rem solid var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+}
+
+@media (max-width: 30rem) {
+  .chronometer-card,
+  .name-form {
+    padding: 1rem;
+  }
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.split > .sync-form {
+  grid-column: 1 / -1;
+}
+
+.split > app-ranking {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.split > .chronometer-grid {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+@media (max-width: 48rem) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .split > app-ranking,
+  .split > .chronometer-grid {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+.sync-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.waiting {
+  text-align: center;
+  opacity: 0.7;
+  list-style: none;
+}
+
+.startup-banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  opacity: 0.7;
+}

@@ -1,0 +1,184 @@
+<section
+  [class.split]="eventId && readonly"
+  [attr.aria-label]="i18n.t('chronometers.label')"
+>
+  @if (eventId) {
+    @if (store.syncError()) {
+      <p class="sync-form" role="alert">{{ i18n.t('sync.error') }}</p>
+    }
+  } @else if (syncAvailable) {
+    <form
+      class="sync-form"
+      [attr.aria-label]="i18n.t('sync.label')"
+      (submit)="$event.preventDefault(); joinRoom()"
+    >
+      @if (store.currentRoom(); as room) {
+        <p>
+          {{ i18n.t('sync.inRoom') }} <strong>{{ room }}</strong>
+        </p>
+        @if (store.syncError()) {
+          <p role="alert">{{ i18n.t('sync.error') }}</p>
+        }
+        <button type="button" (click)="copyLink()">{{ i18n.t('sync.copyLink') }}</button>
+        <button class="secondary" type="button" (click)="leaveRoom()">
+          {{ i18n.t('sync.leave') }}
+        </button>
+      } @else {
+        <label for="room-code">{{ i18n.t('sync.roomCode') }}</label>
+        <input
+          id="room-code"
+          name="roomCode"
+          type="text"
+          autocomplete="off"
+          maxlength="64"
+          [value]="roomInput()"
+          (input)="updateRoom($event)"
+        />
+        <button type="submit" [disabled]="!roomValid()">{{ i18n.t('sync.join') }}</button>
+        <button class="secondary" type="button" (click)="generateRoom()">
+          {{ i18n.t('sync.newCode') }}
+        </button>
+      }
+    </form>
+  }
+  @if (eventId && readonly && !started()) {
+    <p class="startup-banner" role="status">{{ i18n.t('startup.waiting') }}</p>
+  }
+  <ul class="chronometer-grid" [attr.aria-label]="i18n.t('chronometers.label')">
+    @if (!readonly) {
+      <li>
+        @if (naming()) {
+          <form
+            class="name-form"
+            [attr.aria-label]="i18n.t('chronometer.new')"
+            (submit)="confirmName($event)"
+            (keydown.escape)="cancelName()"
+          >
+            <label for="chronometer-name">{{ i18n.t('chronometer.name') }}</label>
+            <input
+              #nameInput
+              id="chronometer-name"
+              name="chronometerName"
+              type="text"
+              autocomplete="off"
+              required
+              [attr.maxlength]="nameMaxLength"
+              [attr.aria-invalid]="duplicateName()"
+              [attr.aria-describedby]="duplicateName() ? 'chronometer-name-error' : null"
+              [value]="pendingName()"
+              (input)="updateName($event)"
+            />
+            @if (duplicateName()) {
+              <p id="chronometer-name-error" class="name-error" role="alert">
+                {{ i18n.t('chronometer.nameUsed') }}
+              </p>
+            }
+            <div class="name-actions">
+              <button type="submit" [disabled]="!canConfirmName()">
+                {{ i18n.t('common.add') }}
+              </button>
+              <button class="secondary" type="button" (click)="cancelName()">
+                {{ i18n.t('common.cancel') }}
+              </button>
+            </div>
+          </form>
+        } @else {
+          <button
+            class="add-tile"
+            type="button"
+            [attr.aria-label]="i18n.t('chronometer.add')"
+            (click)="requestName()"
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+        }
+      </li>
+    }
+    @for (chronometer of visibleChronometers(); track chronometer.id) {
+      <li>
+        <article
+          class="chronometer-card"
+          [class.running]="chronometer.status === 'running'"
+          [class.leaving]="leaving().has(chronometer.id)"
+          [attr.id]="chronometer.id"
+        >
+          <h2>{{ chronometer.name }}</h2>
+          <output
+            class="time"
+            [attr.aria-label]="
+              i18n.t('chronometer.elapsed', { time: chronometer.formattedElapsed })
+            "
+          >
+            {{ chronometer | liveElapsed }}
+          </output>
+          @if (!readonly) {
+            <div class="card-actions">
+              <button
+                class="icon-button"
+                type="button"
+                [attr.aria-label]="i18n.t('chronometer.startNamed', { name: chronometer.name })"
+                [attr.title]="i18n.t('chronometer.start')"
+                [disabled]="chronometer.status !== 'stopped' || chronometer.startInstant !== null"
+                (click)="store.startOne(chronometer.id)"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+              <button
+                class="icon-button"
+                type="button"
+                [attr.aria-label]="i18n.t('chronometer.stopNamed', { name: chronometer.name })"
+                [attr.title]="i18n.t('chronometer.stop')"
+                [disabled]="chronometer.status !== 'running'"
+                (click)="stop(chronometer.id)"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <rect x="6" y="6" width="12" height="12" rx="1" />
+                </svg>
+              </button>
+              @if (showResume()) {
+                <button
+                  class="icon-button"
+                  type="button"
+                  [attr.aria-label]="i18n.t('chronometer.resumeNamed', { name: chronometer.name })"
+                  [attr.title]="i18n.t('chronometer.resume')"
+                  [disabled]="chronometer.status !== 'stopped' || chronometer.startInstant === null"
+                  (click)="store.resumeOne(chronometer.id)"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 5v14h3V5zM11 5v14l9-7z" />
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+        </article>
+      </li>
+    }
+    @if (eventId && readonly && started() && visibleChronometers().length === 0) {
+      <li class="waiting" role="status">{{ i18n.t('chronometers.waiting') }}</li>
+    }
+  </ul>
+  @if (eventId && readonly) {
+    <app-ranking [chronometers]="store.chronometers()" />
+  }
+</section>
