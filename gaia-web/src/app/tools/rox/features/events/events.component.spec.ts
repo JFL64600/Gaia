@@ -6,6 +6,7 @@ import { resetLocalStorage } from '../../core/testing-storage';
 import { EventStore } from '../../core/event.store';
 import { I18n } from '../../core/i18n.service';
 import { routes } from '../../app.routes';
+import { DisplayModeService } from '../../../../preferences/display-mode.service';
 
 describe('EventsComponent', () => {
   let harness: RouterTestingHarness;
@@ -16,6 +17,7 @@ describe('EventsComponent', () => {
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
     TestBed.inject(I18n).setLanguage('fr');
     store = TestBed.inject(EventStore);
+    TestBed.inject(DisplayModeService).setAdmin(true);
     harness = await RouterTestingHarness.create('/admin/events');
   });
 
@@ -97,6 +99,7 @@ describe('EventsComponent', () => {
 
   it('hides the delete action in read-only mode while keeping the event link', async () => {
     store.create('Tournoi');
+    TestBed.inject(DisplayModeService).setAdmin(false);
     await harness.navigateByUrl('/view/events');
     expect(el().querySelector('.delete-button')).toBeNull();
     expect(el().querySelector('a.event-link')?.getAttribute('href')).toContain('/rox/view/events/');

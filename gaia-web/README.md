@@ -17,8 +17,20 @@ GaiaScores sous `/scores`. Les anciennes routes GaiaRox (`/admin`, `/view` et
 `/events`) sont redirigées lorsqu'elles arrivent sur cet hébergement. Les liens
 utilisant l'ancien domaine nécessitent aussi une redirection sur cet ancien hébergement.
 Le serveur doit renvoyer `index.html` pour les routes Angular, y compris les liens directs.
-L'accueil propose aussi l'accès à `/rox/admin` pour gérer les événements ;
-`/rox` ouvre la consultation publique.
+L'interrupteur, visible uniquement à l'accueil avant le choix de langue, sélectionne
+un mode commun à l'accueil, GaiaRox et GaiaScores : spectateur par défaut,
+administrateur lorsqu'il est activé. Le mode est conservé pendant la navigation, mais n'est pas enregistré :
+chaque rechargement revient en spectateur. L'accueil présente une seule entrée
+par outil. Le bouton n'a pas de libellé visible ; une infobulle indique le mode
+actuel (« Spectateur » ou « Administrateur »), avec un nom accessible et un état
+annoncé aux lecteurs d'écran. Pour changer de mode depuis un outil, revenir à
+l'accueil avec le lien « G ».
+
+Dans GaiaRox, les liens directs s'adaptent au mode courant en conservant
+l'identifiant de l'événement, les paramètres et l'ancre ; ouvrir un lien admin
+après rechargement reste donc en consultation. Dans GaiaScores, le mode admin donne accès au formulaire de
+création ; repasser en spectateur ferme le formulaire sans le soumettre.
+Une création déjà envoyée n'est pas annulée par la bascule.
 
 Les fichiers `public/styles/rox` et `public/styles/scores` conservent les styles
 globaux d'origine ; seule la feuille de l'outil actif est chargée. La langue et
@@ -43,7 +55,8 @@ propres formulaires de création et conservent leurs services Firestore.
 Le workflow `.github/workflows/pages.yml` prépare une publication sur GitHub Pages
 depuis `main`, uniquement pour l'application Angular. Les projets .NET ne sont pas
 publiés. Il installe les dépendances, exécute les tests et construit le site avant
-son déploiement.
+son déploiement. Sur les pull requests ciblant `main`, il exécute les mêmes tests
+et la compilation Pages, sans publier d'artefact ni déployer le site.
 
 Préparer localement les fichiers de publication :
 
@@ -85,6 +98,18 @@ garantissent que chaque outil utilise sa base. Les règles et déploiements Fire
 restent gérés dans les dépôts d'origine ; ne pas déployer les règles de l'un sur
 le projet de l'autre. Les règles existantes ne protègent pas les accès administrateur :
 le mode lecture seule de GaiaRox est une fonctionnalité d'interface, pas une authentification.
+
+### Piste future pour l'accès administrateur
+
+Idée conservée pour plus tard, non retenue pour la première version : proposer
+un lien de connexion à usage unique envoyé uniquement aux adresses d'une liste
+autorisée. Prévoir aussi la révocation des accès, la limitation des demandes
+répétées et des règles Firebase réservant les écritures aux administrateurs autorisés.
+
+Pour commencer, le mode est sélectionné librement par l'interrupteur commun.
+L'authentification par e-mail et la sécurisation Firebase sont reportées.
+Sans contrôle des écritures côté Firebase, une séparation admin/lecture dans
+l'interface ne constitue pas une protection réelle des données.
 
 ## Vérification
 

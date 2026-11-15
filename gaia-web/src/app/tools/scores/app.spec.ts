@@ -4,6 +4,7 @@ import { EVENTS_REMOTE, EventsRemote } from './core/events.remote';
 import { Game } from './core/games';
 import { App } from './app';
 import { provideRouter } from '@angular/router';
+import { DisplayModeService } from '../../preferences/display-mode.service';
 
 const GAMES: readonly Game[] = [
   { code: 'Arpana', label: 'Arpana', role: 'Time' },
@@ -59,6 +60,7 @@ describe('App', () => {
   });
 
   it('renders the events screen and supports event creation', async () => {
+    TestBed.inject(DisplayModeService).setAdmin(true);
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -120,6 +122,30 @@ describe('App', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('ocean');
     expect(localStorage.getItem('gaia.language')).toBe('eu');
     expect(localStorage.getItem('gaia.theme')).toBe('ocean');
+  });
+
+  it('starts in spectator mode and discards an open creation form when admin is disabled', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const mode = TestBed.inject(DisplayModeService);
+    expect(element.querySelector('.preference-mode')).toBeNull();
+    expect(element.querySelector('.create-button')).toBeNull();
+
+    mode.setAdmin(true);
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.create-button')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.create-panel')).not.toBeNull();
+
+    mode.setAdmin(false);
+    fixture.detectChanges();
+    expect(element.querySelector('.create-panel')).toBeNull();
+    expect(element.querySelector('.create-button')).toBeNull();
+    mode.setAdmin(true);
+    fixture.detectChanges();
+    expect(element.querySelector('.create-panel')).toBeNull();
+    expect(remote.created).toHaveLength(0);
   });
 
   it('trims event names and ignores blank names', async () => {

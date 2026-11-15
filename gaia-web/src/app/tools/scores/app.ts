@@ -1,10 +1,11 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { EventStore, EVENT_NAME_MAX_LENGTH, MAX_TEAM_COUNT } from './core/event.store';
 import { I18n } from './core/i18n.service';
 import { attachToolStyles } from '../../tool-styles';
 import { PreferencesControls } from '../../preferences/preferences-controls';
 import { GaiaBrand } from '../../gaia-brand';
 import { EventsPage } from '../../shared/events-page';
+import { DisplayModeService } from '../../preferences/display-mode.service';
 
 @Component({
   selector: 'app-scores',
@@ -14,8 +15,14 @@ import { EventsPage } from '../../shared/events-page';
 export class App {
   protected readonly i18n = inject(I18n);
   protected readonly eventStore = inject(EventStore);
+  protected readonly mode = inject(DisplayModeService);
   constructor() {
     attachToolStyles('styles/scores/styles.css', inject(DestroyRef));
+    effect(() => {
+      if (!this.mode.admin()) {
+        this.creating.set(false);
+      }
+    });
   }
   protected readonly creating = signal(false);
   protected readonly pendingName = signal('');
@@ -59,7 +66,7 @@ export class App {
   protected async createEvent(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     const teamCount = this.pendingTeamCount();
-    if (!this.validEvent() || teamCount === null || this.saving()) return;
+    if (!this.mode.admin() || !this.validEvent() || teamCount === null || this.saving()) return;
     this.saving.set(true);
     try {
       const created = await this.eventStore.create(

@@ -1,15 +1,24 @@
-import { Component, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, input, signal, viewChild } from '@angular/core';
 import { LANGUAGES, Language, PreferencesService, ThemeId } from './preferences.service';
+import { DisplayModeService } from './display-mode.service';
 
 const LABELS = {
-  fr: { language: 'Langue', theme: 'Thème', forest: 'Forêt', basque: 'Basque', ocean: 'Océan', purple: 'Violet', sunset: 'Coucher de soleil', dark: 'Sombre' },
-  eu: { language: 'Hizkuntza', theme: 'Gaia', forest: 'Basoa', basque: 'Euskal', ocean: 'Ozeanoa', purple: 'Morea', sunset: 'Ilunabarra', dark: 'Iluna' },
-} satisfies Record<Language, Record<'language' | 'theme' | ThemeId, string>>;
+  fr: { admin: 'Mode administrateur', spectator: 'Spectateur', administrator: 'Administrateur', language: 'Langue', theme: 'Thème', forest: 'Forêt', basque: 'Basque', ocean: 'Océan', purple: 'Violet', sunset: 'Coucher de soleil', dark: 'Sombre' },
+  eu: { admin: 'Administratzaile modua', spectator: 'Ikuslea', administrator: 'Administratzailea', language: 'Hizkuntza', theme: 'Gaia', forest: 'Basoa', basque: 'Euskal', ocean: 'Ozeanoa', purple: 'Morea', sunset: 'Ilunabarra', dark: 'Iluna' },
+} satisfies Record<Language, Record<'admin' | 'spectator' | 'administrator' | 'language' | 'theme' | ThemeId, string>>;
 
 @Component({
   selector: 'gaia-preferences',
   template: `
     <div class="preferences">
+      @if (showModeToggle()) {
+        <button class="preference-mode" type="button" role="switch"
+          [attr.aria-label]="labels().admin" [attr.aria-checked]="mode.admin()"
+          [attr.title]="mode.admin() ? labels().administrator : labels().spectator"
+          (click)="mode.setAdmin(!mode.admin())">
+          <span class="mode-track" aria-hidden="true"><span></span></span>
+        </button>
+      }
       <div class="preference-languages" role="group" [attr.aria-label]="labels().language">
         @for (language of languages; track language) {
           <button type="button" [attr.lang]="language"
@@ -43,7 +52,12 @@ const LABELS = {
   `,
   styles: `
     :host { display: inline-block; }
-    .preferences { display: flex; align-items: center; gap: .75rem; }
+    .preferences { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+    .preference-mode { display: inline-flex; align-items: center; justify-content: center; min-width: 2.75rem; min-height: 2.75rem; padding: .3rem; border: 0; background: transparent; cursor: pointer; }
+    .mode-track { box-sizing: border-box; display: inline-flex; align-items: center; width: 2.25rem; height: 1.3rem; padding: .15rem; border: 1px solid var(--header-muted); border-radius: 1rem; }
+    .mode-track > span { width: .85rem; height: .85rem; border-radius: 50%; background: var(--header-muted); }
+    .preference-mode[aria-checked='true'] .mode-track { background: var(--header-text); }
+    .preference-mode[aria-checked='true'] .mode-track > span { transform: translateX(.9rem); background: var(--header); }
     .preference-languages { display: flex; align-items: center; gap: .2rem; }
     .preference-languages button { min-width: 2.6rem; padding: .45rem .55rem; border: 1px solid var(--header-muted); border-radius: .5rem; background: transparent; color: var(--header-muted); cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; }
     .preference-languages button[aria-pressed='true'] { background: var(--header-text); color: var(--header); }
@@ -57,7 +71,9 @@ const LABELS = {
   `,
 })
 export class PreferencesControls {
+  readonly showModeToggle = input(false);
   protected readonly preferences = inject(PreferencesService);
+  protected readonly mode = inject(DisplayModeService);
   protected readonly languages = LANGUAGES;
   protected readonly themes: readonly { id: ThemeId; swatch: string }[] = [
     { id: 'forest', swatch: '#10643b' }, { id: 'basque', swatch: '#c8102e' },
