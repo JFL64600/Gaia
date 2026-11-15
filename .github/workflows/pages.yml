@@ -1,6 +1,11 @@
 name: Deploy Gaia to GitHub Pages
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - gaia-web/**
+      - .github/workflows/pages.yml
   push:
     branches: [main]
     paths:
@@ -12,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -33,10 +38,12 @@ jobs:
       - run: npm test -- --watch=false
       - run: npm run build:pages
       - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
         with:
           path: gaia-web/dist/gaia-web/browser
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:

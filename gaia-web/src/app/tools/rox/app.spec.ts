@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { ChronometerStore } from './core/chronometer.store';
 import { ChronometerSnapshot } from './core/chronometer.model';
 import { CHRONOMETER_REMOTE, ChronometerRemote } from './core/chronometer.tokens';
+import { DisplayModeService } from '../../preferences/display-mode.service';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -41,6 +42,7 @@ describe('App', () => {
       push: (id, snapshot) => void saved.set(id, snapshot),
     };
     TestBed.overrideProvider(CHRONOMETER_REMOTE, { useValue: remote });
+    TestBed.inject(DisplayModeService).setAdmin(true);
     const harness = await RouterTestingHarness.create('/admin/events/event-abc123');
     const store = TestBed.inject(ChronometerStore);
     store.add();

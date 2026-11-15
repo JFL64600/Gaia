@@ -10,10 +10,10 @@
   </header>
 
   <main class="content">
-    <gaia-events-page [events]="eventStore.events()" [creating]="creating()"
+    <gaia-events-page [events]="eventStore.events()" [creating]="creating()" [canCreate]="mode.admin()"
       [loading]="eventStore.loading()" [error]="eventStore.error()"
       [(query)]="searchTerm" (create)="startCreating()">
-      @if (creating()) {
+      @if (mode.admin() && creating()) {
         <form class="create-panel" (submit)="createEvent($event)" (keydown.escape)="cancelCreating()">
           <div class="create-panel-heading">
             <h2>{{ i18n.t('events.new') }}</h2>

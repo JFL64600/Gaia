@@ -1,4 +1,16 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateChildFn, Router, Routes } from '@angular/router';
+import { DisplayModeService } from '../../preferences/display-mode.service';
+
+const matchDisplayMode: CanActivateChildFn = (route, state) => {
+  const admin = inject(DisplayModeService).admin();
+  if (route.data['readonly'] === !admin) {
+    return true;
+  }
+  return inject(Router).parseUrl(
+    state.url.replace(/(^|\/)(?:admin|view)(?=\/|[?#]|$)/, `$1${admin ? 'admin' : 'view'}`),
+  );
+};
 
 const eventsPage = () =>
   import('./features/events/events.component').then(({ EventsComponent }) => EventsComponent);
@@ -11,6 +23,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     data: { readonly: false },
+    canActivateChild: [matchDisplayMode],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'events' },
       { path: 'events', loadComponent: eventsPage },
@@ -20,6 +33,7 @@ export const routes: Routes = [
   {
     path: 'view',
     data: { readonly: true },
+    canActivateChild: [matchDisplayMode],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'events' },
       { path: 'events', loadComponent: eventsPage },
