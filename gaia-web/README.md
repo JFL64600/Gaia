@@ -20,8 +20,9 @@ Le serveur doit renvoyer `index.html` pour les routes Angular, y compris les lie
 L'interrupteur, visible uniquement à l'accueil avant le choix de langue, sélectionne
 un mode commun à l'accueil, GaiaRox et GaiaScores : spectateur par défaut,
 administrateur lorsqu'il est activé. Le mode est conservé pendant la navigation, mais n'est pas enregistré :
-chaque rechargement revient en spectateur. L'accueil présente une seule entrée
-par outil. Le bouton n'a pas de libellé visible ; une infobulle indique le mode
+chaque rechargement revient en spectateur. L'accueil présente une vignette illustrée
+par outil, avec une dernière rangée centrée lorsque d'autres outils sont ajoutés.
+Le bouton n'a pas de libellé visible ; une infobulle indique le mode
 actuel (« Spectateur » ou « Administrateur »), avec un nom accessible et un état
 annoncé aux lecteurs d'écran. Pour changer de mode depuis un outil, revenir à
 l'accueil avec le lien « G ».
