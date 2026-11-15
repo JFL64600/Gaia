@@ -5,8 +5,8 @@ import { PreferencesService } from './preferences/preferences.service';
 import { GaiaBrand } from './gaia-brand';
 
 const TEXT = {
-  fr: { select: 'Choisissez un outil.', tools: 'Outils Gaia', timing: 'Chronomètres et classements', admin: 'administration', manage: 'Créer et gérer les événements', scores: 'Événements et équipes' },
-  eu: { select: 'Aukeratu tresna bat.', tools: 'Gaia tresnak', timing: 'Kronometroak eta sailkapenak', admin: 'administrazioa', manage: 'Ekitaldiak sortu eta kudeatu', scores: 'Ekitaldiak eta taldeak' },
+  fr: { tools: 'Outils Gaia', timing: 'Chronomètres et classements', admin: 'administration', manage: 'Créer et gérer les événements', scores: 'Événements et équipes' },
+  eu: { tools: 'Gaia tresnak', timing: 'Kronometroak eta sailkapenak', admin: 'administrazioa', manage: 'Ekitaldiak sortu eta kudeatu', scores: 'Ekitaldiak eta taldeak' },
 } as const;
 
 @Component({
@@ -18,8 +18,6 @@ const TEXT = {
       <gaia-preferences />
     </header>
     <main>
-      <h1>Gaia</h1>
-      <p>{{ text().select }}</p>
       <nav [attr.aria-label]="text().tools">
         <a routerLink="/rox">GaiaRox <span>{{ text().timing }}</span></a>
         <a routerLink="/rox/admin">GaiaRox — {{ text().admin }} <span>{{ text().manage }}</span></a>

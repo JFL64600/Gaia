@@ -65,7 +65,7 @@ describe('Gaia navigation', () => {
     expect(Array.from(options).every((option) => !option.hasAttribute('title') && option.textContent === '')).toBe(true);
     home.querySelector<HTMLButtonElement>('.preference-option[aria-label="Ozeanoa"]')!.click();
     harness.detectChanges();
-    expect(home.textContent).toContain('Aukeratu tresna bat.');
+    expect(home.textContent).not.toContain('Aukeratu tresna bat.');
 
     await harness.navigateByUrl('/rox/admin/events');
     expect(harness.routeNativeElement?.querySelector('.gaia-brand > span')?.textContent).toBe('GaiaRox');
@@ -99,7 +99,9 @@ describe('Gaia navigation', () => {
     expect(document.documentElement.lang).toBe('fr');
     expect(document.head.querySelector('link[href$="styles/scores/styles.css"]')).toBeNull();
     await harness.navigateByUrl('/');
-    expect(harness.routeNativeElement?.textContent).toContain('Choisissez un outil.');
+    expect(harness.routeNativeElement?.querySelector('main > h1')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('main > p')).toBeNull();
+    expect(harness.routeNativeElement?.textContent).not.toContain('Choisissez un outil.');
     expect(localStorage.getItem('gaia.language')).toBe('fr');
     expect(localStorage.getItem('gaia.theme')).toBe('dark');
   });
