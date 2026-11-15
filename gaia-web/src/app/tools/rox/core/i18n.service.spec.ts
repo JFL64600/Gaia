@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { I18n } from './i18n.service';
 import { resetLocalStorage } from './testing-storage';
+import { PreferencesService } from '../../../preferences/preferences.service';
 
 describe('I18n', () => {
   beforeEach(() => resetLocalStorage());
@@ -14,7 +15,7 @@ describe('I18n', () => {
 
   it('switches to Basque, interpolates parameters', () => {
     const i18n = TestBed.inject(I18n);
-    i18n.setLanguage('eu');
+    TestBed.inject(PreferencesService).setLanguage('eu');
     expect(i18n.t('chronometer.startNamed', { name: 'Xabi' })).toBe('Hasi Xabi');
     expect(document.documentElement.lang).toBe('eu');
   });

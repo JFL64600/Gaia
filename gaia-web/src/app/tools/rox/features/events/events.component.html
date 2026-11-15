@@ -1,6 +1,6 @@
-<gaia-events-page [events]="events()" [canCreate]="!readonly" [creating]="creating()"
+<gaia-events-page [events]="events()" [canCreate]="!readonly()" [creating]="creating()"
   (create)="startCreating()" (remove)="remove($event.id, $event.name)">
-  @if (creating() && !readonly) {
+  @if (creating() && !readonly()) {
     <gaia-event-creation
       [title]="i18n.t('events.new')"
       [description]="i18n.t('events.nameHint')"

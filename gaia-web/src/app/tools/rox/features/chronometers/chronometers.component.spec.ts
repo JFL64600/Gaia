@@ -3,10 +3,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { EventStore } from '../../core/event.store';
 import { Subject } from 'rxjs';
-import { I18n } from '../../core/i18n.service';
 import { ChronometerStore } from '../../core/chronometer.store';
 import { CHRONOMETER_CLOCK, CHRONOMETER_TIMER } from '../../core/chronometer.tokens';
 import { ChronometersComponent } from './chronometers.component';
+import { DisplayModeService } from '../../../../preferences/display-mode.service';
 
 describe('ChronometersComponent', () => {
   let fixture: ComponentFixture<ChronometersComponent>;
@@ -18,7 +18,7 @@ describe('ChronometersComponent', () => {
     resetLocalStorage();
     now = 0;
     tick = new Subject<void>();
-    const route = { snapshot: { data: {}, paramMap: convertToParamMap({}) } };
+    const route = { snapshot: { paramMap: convertToParamMap({}) } };
 
     await TestBed.configureTestingModule({
       imports: [ChronometersComponent],
@@ -29,12 +29,10 @@ describe('ChronometersComponent', () => {
       ],
     }).compileComponents();
 
-    TestBed.inject(I18n).setLanguage('fr');
+    TestBed.inject(DisplayModeService).setAdmin(true);
     store = TestBed.inject(ChronometerStore);
-    if (resumeEnabled !== undefined) {
-      const event = TestBed.inject(EventStore).create('Rally', resumeEnabled);
-      route.snapshot.paramMap = convertToParamMap({ id: event!.id });
-    }
+    const event = TestBed.inject(EventStore).create('Rally', resumeEnabled ?? false)!;
+    route.snapshot.paramMap = convertToParamMap({ id: event.id });
     fixture = TestBed.createComponent(ChronometersComponent);
     await fixture.whenStable();
   }

@@ -194,7 +194,7 @@ h2 {
   gap: 1.5rem;
 }
 
-.split > .sync-form {
+.split > .sync-error {
   grid-column: 1 / -1;
 }
 
@@ -221,11 +221,7 @@ h2 {
   }
 }
 
-.sync-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+.sync-error {
   margin-bottom: 1rem;
 }
 
