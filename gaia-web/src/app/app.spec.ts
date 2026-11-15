@@ -112,6 +112,23 @@ describe('Gaia navigation', () => {
     expect(localStorage.getItem('gaia.theme')).toBe('dark');
   });
 
+  it('shows illustrated links with only the name of each tool', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    const home = harness.routeNativeElement as HTMLElement;
+    const links = Array.from(home.querySelectorAll<HTMLAnchorElement>('nav > a'));
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/rox', '/scores']);
+    expect(links.map((link) => link.querySelector('img')?.getAttribute('src')))
+      .toEqual(['images/home-rox.svg', 'images/home-scores.svg']);
+    expect(links.every((link) => link.querySelector('img')?.getAttribute('alt') === '')).toBe(true);
+    expect(links.map((link) => link.querySelector('.tile-label')?.textContent?.trim()))
+      .toEqual(['GaiaRox', 'GaiaScores']);
+    home.querySelector<HTMLButtonElement>('.preference-languages button[lang="eu"]')!.click();
+    harness.detectChanges();
+    expect(home.querySelector('nav')?.getAttribute('aria-label')).toBe('Gaia tresnak');
+    expect(links.map((link) => link.querySelector('.tile-label')?.textContent?.trim()))
+      .toEqual(['GaiaRox', 'GaiaScores']);
+  });
+
   it('opens the shared event URL in spectator mode and ignores the old room parameter', async () => {
     const harness = await RouterTestingHarness.create('/rox/events/event-123?source=share&room=room-123#ranking');
     expect(TestBed.inject(Router).url).toBe('/rox/events/event-123?source=share&room=room-123#ranking');
