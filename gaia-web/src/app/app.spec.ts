@@ -6,6 +6,7 @@ import { CHRONOMETER_REMOTE, ChronometerRemote } from './tools/rox/core/chronome
 import { EVENTS_REMOTE, EventsRemote } from './tools/scores/core/events.remote';
 import { DisplayModeService } from './preferences/display-mode.service';
 import { ChronometerStore } from './tools/rox/core/chronometer.store';
+import { vi } from 'vitest';
 
 const roxRemote: ChronometerRemote = {
   connect: (_id, onChange) => {
@@ -44,10 +45,8 @@ describe('Gaia navigation', () => {
   });
 
   it('shares choices made on the home page and in the tools while keeping their styles', async () => {
-    localStorage.setItem('gaiarox.theme', 'ocean');
-    localStorage.setItem('gaiarox.language', 'eu');
-    localStorage.setItem('gaiascores.theme', 'sunset');
-    localStorage.setItem('gaiascores.language', 'fr');
+    localStorage.setItem('gaia.theme', 'sunset');
+    localStorage.setItem('gaia.language', 'fr');
     const harness = await RouterTestingHarness.create('/');
     const home = harness.routeNativeElement as HTMLElement;
     expect(home.textContent).toContain('GaiaScores');
@@ -71,12 +70,12 @@ describe('Gaia navigation', () => {
 
     home.querySelector<HTMLButtonElement>('.preference-mode')!.click();
     harness.detectChanges();
-    await harness.navigateByUrl('/rox/admin/events');
+    await harness.navigateByUrl('/rox/events');
     expect(harness.routeNativeElement?.querySelector('.gaia-brand > span')?.textContent).toBe('GaiaRox');
     expect(harness.routeNativeElement?.querySelectorAll('header a')).toHaveLength(1);
     expect(harness.routeNativeElement?.textContent).toContain('Rox event');
     expect(harness.routeNativeElement?.querySelector('a.event-link')?.getAttribute('href'))
-      .toBe('/rox/admin/events/event-123');
+      .toBe('/rox/events/event-123');
     expect(harness.routeNativeElement?.querySelector('.create-button')).not.toBeNull();
     expect(document.documentElement.getAttribute('data-theme')).toBe('ocean');
     expect(document.documentElement.lang).toBe('eu');
@@ -100,7 +99,7 @@ describe('Gaia navigation', () => {
     await harness.navigateByUrl('/');
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.preference-mode')!.click();
     harness.detectChanges();
-    await harness.navigateByUrl('/rox/view/events');
+    await harness.navigateByUrl('/rox/events');
     expect(harness.routeNativeElement?.querySelector('.create-button')).toBeNull();
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     expect(document.documentElement.lang).toBe('fr');
@@ -113,13 +112,54 @@ describe('Gaia navigation', () => {
     expect(localStorage.getItem('gaia.theme')).toBe('dark');
   });
 
-  it('redirects old Rox event URLs to their integrated equivalent', async () => {
-    const harness = await RouterTestingHarness.create('/view/events/event-123?source=share');
-    expect(TestBed.inject(Router).url).toBe('/rox/view/events/event-123?source=share');
+  it('opens the shared event URL in spectator mode and ignores the old room parameter', async () => {
+    const harness = await RouterTestingHarness.create('/rox/events/event-123?source=share&room=room-123#ranking');
+    expect(TestBed.inject(Router).url).toBe('/rox/events/event-123?source=share&room=room-123#ranking');
     expect(harness.routeNativeElement?.textContent).toContain('GaiaRox');
+    expect(TestBed.inject(DisplayModeService).admin()).toBe(false);
+    expect(TestBed.inject(ChronometerStore).currentRoom()).toBe('event-123');
+    expect(harness.routeNativeElement?.querySelector('.add-tile')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('#room-code')).toBeNull();
   });
 
-  it('defaults to spectator on admin links and keeps event data across mode changes from home', async () => {
+  it.each([
+    ['/admin/events/event-123', '/'],
+    ['/view/events/event-123', '/'],
+    ['/events/event-123', '/'],
+    ['/rox/admin/events/event-123', '/rox/events'],
+    ['/rox/view/events/event-123', '/rox/events'],
+  ])('no longer opens an event from the old URL %s', async (path, destination) => {
+    const harness = await RouterTestingHarness.create(path);
+    expect(TestBed.inject(Router).url).toBe(destination);
+    expect(TestBed.inject(ChronometerStore).currentRoom()).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('app-chronometers')).toBeNull();
+  });
+
+  it.each(['/rox', '/rox/events'])('opens %s at the common list URL in administrator mode', async (path) => {
+    TestBed.inject(DisplayModeService).setAdmin(true);
+    const harness = await RouterTestingHarness.create(`${path}?source=bookmark#events`);
+    expect(TestBed.inject(Router).url).toBe('/rox/events?source=bookmark#events');
+    expect(TestBed.inject(DisplayModeService).admin()).toBe(true);
+    expect(harness.routeNativeElement?.querySelector('.create-button')).not.toBeNull();
+  });
+
+  it('still reports event synchronization failures after removing the room form', async () => {
+    const remote: ChronometerRemote = {
+      ...roxRemote,
+      connect: (_id, onChange, onError) => {
+        onChange({ chronometers: [] });
+        onError?.(new Error('Disconnected'));
+        return () => undefined;
+      },
+    };
+    TestBed.overrideProvider(CHRONOMETER_REMOTE, { useValue: remote });
+    const harness = await RouterTestingHarness.create('/rox/events/event-123');
+    expect(harness.routeNativeElement?.querySelector('.sync-error[role="alert"]')?.textContent)
+      .toContain('Synchronisation impossible');
+    expect(harness.routeNativeElement?.querySelector('#room-code')).toBeNull();
+  });
+
+  it('defaults to spectator on shared links and keeps event data across mode changes from home', async () => {
     const startInstant = Date.now() - 5000;
     let writes = 0;
     const remote: ChronometerRemote = {
@@ -135,28 +175,108 @@ describe('Gaia navigation', () => {
       push: () => { writes++; },
     };
     TestBed.overrideProvider(CHRONOMETER_REMOTE, { useValue: remote });
-    localStorage.setItem('gaia.admin', 'true');
-    const harness = await RouterTestingHarness.create('/rox/admin/events/event-123?source=share#ranking');
+    const harness = await RouterTestingHarness.create('/rox/events/event-123?source=share#ranking');
     const router = TestBed.inject(Router);
-    expect(router.url).toBe('/rox/view/events/event-123?source=share#ranking');
+    expect(router.url).toBe('/rox/events/event-123?source=share#ranking');
     expect(harness.routeNativeElement?.querySelector('.preference-mode')).toBeNull();
     expect(harness.routeNativeElement?.querySelector('.add-tile')).toBeNull();
 
     await harness.navigateByUrl('/');
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.preference-mode')!.click();
-    await harness.navigateByUrl('/rox/view/events/event-123?source=share#ranking');
-    expect(router.url).toBe('/rox/admin/events/event-123?source=share#ranking');
+    await harness.navigateByUrl('/rox/events/event-123?source=share#ranking');
+    expect(router.url).toBe('/rox/events/event-123?source=share#ranking');
     expect(harness.routeNativeElement?.querySelector('.add-tile')).not.toBeNull();
 
     await harness.navigateByUrl('/');
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.preference-mode')!.click();
-    await harness.navigateByUrl('/rox/admin/events/event-123?source=share#ranking');
-    expect(router.url).toBe('/rox/view/events/event-123?source=share#ranking');
+    await harness.navigateByUrl('/rox/events/event-123?source=share#ranking');
+    expect(router.url).toBe('/rox/events/event-123?source=share#ranking');
     expect(harness.routeNativeElement?.querySelector('.add-tile')).toBeNull();
     expect(TestBed.inject(ChronometerStore).chronometers()).toMatchObject([
       { id: 'runner-1', status: 'running', startInstant },
     ]);
     expect(writes).toBe(0);
+  });
+
+  it('changes the event display in place without reconnecting or writing chronometers', async () => {
+    let connections = 0;
+    let writes = 0;
+    const snapshot = {
+      chronometers: [
+        { id: 'runner-1', name: 'Running', status: 'running' as const, startInstant: Date.now(), stopInstant: null },
+        { id: 'runner-2', name: 'Finished', status: 'stopped' as const, startInstant: 1000, stopInstant: 2000 },
+      ],
+    };
+    TestBed.overrideProvider(CHRONOMETER_REMOTE, {
+      useValue: {
+        ...roxRemote,
+        connect: (_id: string, onChange: (value: typeof snapshot) => void) => {
+          connections++;
+          onChange(snapshot);
+          return () => undefined;
+        },
+        push: () => { writes++; },
+      },
+    });
+    const harness = await RouterTestingHarness.create('/rox/events/event-123?source=share#ranking');
+    const mode = TestBed.inject(DisplayModeService);
+    const router = TestBed.inject(Router);
+    const url = router.url;
+    const store = TestBed.inject(ChronometerStore);
+    const before = store.chronometers();
+    expect(harness.routeNativeElement?.querySelectorAll('.chronometer-card')).toHaveLength(1);
+    expect(harness.routeNativeElement?.querySelector('app-ranking')).not.toBeNull();
+    expect(harness.routeNativeElement?.querySelector('header .language-switch')).not.toBeNull();
+
+    mode.setAdmin(true);
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement?.querySelectorAll('.chronometer-card')).toHaveLength(2);
+    expect(harness.routeNativeElement?.querySelector('app-ranking')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('header .language-switch')).toBeNull();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.add-tile')!.click();
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement?.querySelector('.name-form')).not.toBeNull();
+
+    mode.setAdmin(false);
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement?.querySelector('.name-form')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.card-actions')).toBeNull();
+    expect(harness.routeNativeElement?.querySelectorAll('.chronometer-card')).toHaveLength(1);
+    expect(harness.routeNativeElement?.querySelector('app-ranking')).not.toBeNull();
+    expect(router.url).toBe(url);
+    expect(store.chronometers()).toEqual(before);
+    expect(connections).toBe(1);
+    expect(writes).toBe(0);
+
+    mode.setAdmin(true);
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement?.querySelector('.name-form')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.add-tile')).not.toBeNull();
+  });
+
+  it('copies the same event URL in both modes, including the Pages base path', async () => {
+    const href = 'https://example.test/Gaia/rox/events/event-123?source=share#ranking';
+    vi.stubGlobal('location', { href });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const clipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      const harness = await RouterTestingHarness.create('/rox/events/event-123?source=share#ranking');
+      for (const admin of [false, true]) {
+        TestBed.inject(DisplayModeService).setAdmin(admin);
+        await harness.fixture.whenStable();
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('header .copy-link')!.click();
+        await harness.fixture.whenStable();
+        expect(writeText).toHaveBeenLastCalledWith(href);
+      }
+    } finally {
+      vi.unstubAllGlobals();
+      if (clipboard) {
+        Object.defineProperty(navigator, 'clipboard', clipboard);
+      } else {
+        Reflect.deleteProperty(navigator, 'clipboard');
+      }
+    }
   });
 
   it('shares the mode across the portal and both tools without a separate admin card', async () => {
@@ -173,14 +293,14 @@ describe('Gaia navigation', () => {
     harness.detectChanges();
     expect(toggle.title).toBe('Administrateur');
     expect(toggle.getAttribute('aria-checked')).toBe('true');
-    expect(home.querySelector('nav > a')?.getAttribute('href')).toBe('/rox/admin');
+    expect(home.querySelector('nav > a')?.getAttribute('href')).toBe('/rox');
 
     await harness.navigateByUrl('/scores');
     expect(harness.routeNativeElement?.querySelector('.preference-mode')).toBeNull();
     expect(harness.routeNativeElement?.querySelector('.create-button')).not.toBeNull();
     await harness.navigateByUrl('/rox');
     expect(harness.routeNativeElement?.querySelector('.preference-mode')).toBeNull();
-    expect(TestBed.inject(Router).url).toBe('/rox/admin/events');
+    expect(TestBed.inject(Router).url).toBe('/rox/events');
     expect(harness.routeNativeElement?.querySelector('.create-button')).not.toBeNull();
     expect(TestBed.inject(DisplayModeService).admin()).toBe(true);
 

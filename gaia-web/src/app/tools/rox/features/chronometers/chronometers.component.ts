@@ -18,8 +18,7 @@ import { I18n } from '../../core/i18n.service';
 import { FIREBASE_OPTIONS } from '../../core/firebase.token';
 import { LiveElapsedPipe } from '../../core/live-elapsed.pipe';
 import { RankingComponent } from '../ranking/ranking.component';
-
-const ROOM_PATTERN = /^[A-Za-z0-9_-]{6,64}$/;
+import { DisplayModeService } from '../../../../preferences/display-mode.service';
 
 export const CHRONOMETER_NAME_MAX_LENGTH = 40;
 const LEAVE_MS = 600;
@@ -36,13 +35,10 @@ export class ChronometersComponent {
   private readonly injector = inject(Injector);
   private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
 
-  protected eventId: string | null = null;
+  private readonly eventId: string;
   private readonly events = inject(EventStore);
-  protected readonly readonly =
-    inject(ActivatedRoute, { optional: true })?.snapshot.data['readonly'] === true;
-  protected readonly syncAvailable = inject(FIREBASE_OPTIONS) !== null;
-  protected readonly roomInput = signal('');
-  protected readonly roomValid = computed(() => ROOM_PATTERN.test(this.roomInput().trim()));
+  private readonly mode = inject(DisplayModeService);
+  protected readonly readonly = computed(() => !this.mode.admin());
   protected readonly nameMaxLength = CHRONOMETER_NAME_MAX_LENGTH;
   protected readonly naming = signal(false);
   protected readonly pendingName = signal('');
@@ -60,61 +56,26 @@ export class ChronometersComponent {
 
   constructor() {
     effect(() => this.trackFinished());
-    const eventId = inject(ActivatedRoute, { optional: true })?.snapshot.paramMap.get('id') ?? null;
-    if (eventId !== null) {
-      this.eventId = eventId;
-      const event = this.events.find(eventId) ?? this.events.join(eventId);
-      this.store.openEvent(event && event.name !== eventId ? event.name : null);
-      if (this.syncAvailable) {
-        this.store.joinRoom(eventId);
+    effect(() => {
+      if (this.readonly()) {
+        this.cancelName();
       }
-      inject(DestroyRef).onDestroy(() => this.store.openEvent());
-      return;
+    });
+    const eventId = inject(ActivatedRoute).snapshot.paramMap.get('id');
+    if (eventId === null) {
+      throw new Error('Chronometer route requires an event id.');
     }
-
-    if (!this.syncAvailable) {
-      return;
+    this.eventId = eventId;
+    const event = this.events.find(eventId) ?? this.events.join(eventId);
+    this.store.openEvent(event && event.name !== eventId ? event.name : null);
+    if (inject(FIREBASE_OPTIONS) !== null) {
+      this.store.joinRoom(eventId);
     }
-
-    const fromUrl = new URLSearchParams(globalThis.location?.search).get('room');
-    const room = fromUrl;
-    if (room && ROOM_PATTERN.test(room)) {
-      this.roomInput.set(room);
-      this.joinRoom();
-    }
-  }
-
-  protected updateRoom(event: Event): void {
-    this.roomInput.set((event.target as HTMLInputElement).value);
-  }
-
-  protected generateRoom(): void {
-    this.roomInput.set(crypto.randomUUID());
-  }
-
-  protected joinRoom(): void {
-    if (!this.roomValid()) {
-      return;
-    }
-
-    const room = this.roomInput().trim();
-    this.store.joinRoom(room);
-  }
-
-  protected leaveRoom(): void {
-    this.store.leaveRoom();
-  }
-
-  protected async copyLink(): Promise<void> {
-    const url = new URL(globalThis.location.href);
-    url.pathname = url.pathname.replace(/\/rox\/admin(?=\/|$)/, '/rox/view');
-    if (this.eventId === null) {
-      url.searchParams.set('room', this.store.currentRoom() ?? '');
-    }
-    await navigator.clipboard?.writeText(url.toString());
+    inject(DestroyRef).onDestroy(() => this.store.openEvent());
   }
 
   protected requestName(): void {
+    if (this.readonly()) return;
     this.pendingName.set('');
     this.naming.set(true);
     afterNextRender(() => this.nameInput()?.nativeElement.focus(), { injector: this.injector });
@@ -126,7 +87,7 @@ export class ChronometersComponent {
 
   protected confirmName(event?: Event): void {
     event?.preventDefault();
-    if (!this.canConfirmName()) {
+    if (this.readonly() || !this.canConfirmName()) {
       return;
     }
 
@@ -139,7 +100,18 @@ export class ChronometersComponent {
     this.pendingName.set('');
   }
   protected stop(id: string): void {
+    if (this.readonly()) return;
     this.store.stop(id);
+  }
+
+  protected start(id: string): void {
+    if (this.readonly()) return;
+    this.store.startOne(id);
+  }
+
+  protected resume(id: string): void {
+    if (this.readonly()) return;
+    this.store.resumeOne(id);
   }
 
   protected readonly leaving = signal<ReadonlySet<string>>(new Set());
@@ -149,7 +121,7 @@ export class ChronometersComponent {
     this.store.chronometers().length > 0,
   );
   protected readonly visibleChronometers = computed(() =>
-    this.eventId && this.readonly
+    this.readonly()
       ? this.store
           .chronometers()
           .filter(
@@ -160,7 +132,9 @@ export class ChronometersComponent {
   );
 
   private trackFinished(): void {
-    if (!this.eventId || !this.readonly) {
+    if (!this.readonly()) {
+      this.visibleIds = new Set();
+      untracked(() => this.leaving.set(new Set()));
       return;
     }
     const current = this.store.chronometers();
@@ -188,6 +162,6 @@ export class ChronometersComponent {
   }
 
   protected showResume(): boolean {
-    return this.eventId !== null && this.events.find(this.eventId)?.resumeEnabled === true;
+    return this.events.find(this.eventId)?.resumeEnabled === true;
   }
 }

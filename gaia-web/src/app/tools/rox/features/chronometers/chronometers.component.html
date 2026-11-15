@@ -1,51 +1,15 @@
 <section
-  [class.split]="eventId && readonly"
+  [class.split]="readonly()"
   [attr.aria-label]="i18n.t('chronometers.label')"
 >
-  @if (eventId) {
-    @if (store.syncError()) {
-      <p class="sync-form" role="alert">{{ i18n.t('sync.error') }}</p>
-    }
-  } @else if (syncAvailable) {
-    <form
-      class="sync-form"
-      [attr.aria-label]="i18n.t('sync.label')"
-      (submit)="$event.preventDefault(); joinRoom()"
-    >
-      @if (store.currentRoom(); as room) {
-        <p>
-          {{ i18n.t('sync.inRoom') }} <strong>{{ room }}</strong>
-        </p>
-        @if (store.syncError()) {
-          <p role="alert">{{ i18n.t('sync.error') }}</p>
-        }
-        <button type="button" (click)="copyLink()">{{ i18n.t('sync.copyLink') }}</button>
-        <button class="secondary" type="button" (click)="leaveRoom()">
-          {{ i18n.t('sync.leave') }}
-        </button>
-      } @else {
-        <label for="room-code">{{ i18n.t('sync.roomCode') }}</label>
-        <input
-          id="room-code"
-          name="roomCode"
-          type="text"
-          autocomplete="off"
-          maxlength="64"
-          [value]="roomInput()"
-          (input)="updateRoom($event)"
-        />
-        <button type="submit" [disabled]="!roomValid()">{{ i18n.t('sync.join') }}</button>
-        <button class="secondary" type="button" (click)="generateRoom()">
-          {{ i18n.t('sync.newCode') }}
-        </button>
-      }
-    </form>
+  @if (store.syncError()) {
+    <p class="sync-error" role="alert">{{ i18n.t('sync.error') }}</p>
   }
-  @if (eventId && readonly && !started()) {
+  @if (readonly() && !started()) {
     <p class="startup-banner" role="status">{{ i18n.t('startup.waiting') }}</p>
   }
   <ul class="chronometer-grid" [attr.aria-label]="i18n.t('chronometers.label')">
-    @if (!readonly) {
+    @if (!readonly()) {
       <li>
         @if (naming()) {
           <form
@@ -111,7 +75,7 @@
           >
             {{ chronometer | liveElapsed }}
           </output>
-          @if (!readonly) {
+          @if (!readonly()) {
             <div class="card-actions">
               <button
                 class="icon-button"
@@ -119,7 +83,7 @@
                 [attr.aria-label]="i18n.t('chronometer.startNamed', { name: chronometer.name })"
                 [attr.title]="i18n.t('chronometer.start')"
                 [disabled]="chronometer.status !== 'stopped' || chronometer.startInstant !== null"
-                (click)="store.startOne(chronometer.id)"
+                (click)="start(chronometer.id)"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -156,7 +120,7 @@
                   [attr.aria-label]="i18n.t('chronometer.resumeNamed', { name: chronometer.name })"
                   [attr.title]="i18n.t('chronometer.resume')"
                   [disabled]="chronometer.status !== 'stopped' || chronometer.startInstant === null"
-                  (click)="store.resumeOne(chronometer.id)"
+                  (click)="resume(chronometer.id)"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -174,11 +138,11 @@
         </article>
       </li>
     }
-    @if (eventId && readonly && started() && visibleChronometers().length === 0) {
+    @if (readonly() && started() && visibleChronometers().length === 0) {
       <li class="waiting" role="status">{{ i18n.t('chronometers.waiting') }}</li>
     }
   </ul>
-  @if (eventId && readonly) {
+  @if (readonly()) {
     <app-ranking [chronometers]="store.chronometers()" />
   }
 </section>

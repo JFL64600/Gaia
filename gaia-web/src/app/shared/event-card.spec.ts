@@ -8,7 +8,7 @@ import { EventCard } from './event-card';
   imports: [EventCard],
   template: `
     <ul>
-      <li gaia-event-card name="Tournoi" link="/rox/admin/events/test-event"
+      <li gaia-event-card name="Tournoi" link="/rox/events/test-event"
         openLabel="Ouvrir Tournoi" [deleteLabel]="deletable ? 'Supprimer Tournoi' : null"
         (remove)="onRemove()"></li>
       <li gaia-event-card name="Rencontre"></li>
@@ -32,7 +32,7 @@ describe('EventCard', () => {
     button.click();
     expect(fixture.componentInstance.onRemove).toHaveBeenCalledOnce();
     expect(TestBed.inject(Router).url).toBe('/');
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('/rox/admin/events/test-event');
+    expect(element.querySelector('a')?.getAttribute('href')).toBe('/rox/events/test-event');
 
     fixture.componentInstance.deletable = false;
     fixture.detectChanges();

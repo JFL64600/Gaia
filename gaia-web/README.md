@@ -13,9 +13,9 @@ npm start
 ```
 
 Ouvrir `http://localhost:4200/`. GaiaRox est accessible sous `/rox` et
-GaiaScores sous `/scores`. Les anciennes routes GaiaRox (`/admin`, `/view` et
-`/events`) sont redirigées lorsqu'elles arrivent sur cet hébergement. Les liens
-utilisant l'ancien domaine nécessitent aussi une redirection sur cet ancien hébergement.
+GaiaScores sous `/scores`. Seules les routes actuelles sont prises en charge :
+les anciennes adresses GaiaRox (`/admin`, `/view`, `/events`, `/rox/admin` et
+`/rox/view`, y compris leurs sous-routes) ne permettent plus d'ouvrir un événement.
 Le serveur doit renvoyer `index.html` pour les routes Angular, y compris les liens directs.
 L'interrupteur, visible uniquement à l'accueil avant le choix de langue, sélectionne
 un mode commun à l'accueil, GaiaRox et GaiaScores : spectateur par défaut,
@@ -26,9 +26,14 @@ actuel (« Spectateur » ou « Administrateur »), avec un nom accessible et un 
 annoncé aux lecteurs d'écran. Pour changer de mode depuis un outil, revenir à
 l'accueil avec le lien « G ».
 
-Dans GaiaRox, les liens directs s'adaptent au mode courant en conservant
-l'identifiant de l'événement, les paramètres et l'ancre ; ouvrir un lien admin
-après rechargement reste donc en consultation. Dans GaiaScores, le mode admin donne accès au formulaire de
+Dans GaiaRox, les URLs sont communes aux deux modes : `/rox/events` pour la liste
+et `/rox/events/:id` pour un événement. Le mode dépend uniquement de
+l'interrupteur commun, jamais du lien reçu ou partagé. Un rechargement ouvre
+toujours la consultation. La synchronisation utilise l'identifiant de
+l'événement ; l'ancien parcours de saisie de salle et le paramètre `?room=`
+ne sont plus pris en charge.
+Repasser en spectateur ferme les formulaires sans les soumettre et conserve les
+chronomètres en cours. Dans GaiaScores, le mode admin donne accès au formulaire de
 création ; repasser en spectateur ferme le formulaire sans le soumettre.
 Une création déjà envoyée n'est pas annulée par la bascule.
 
@@ -36,11 +41,10 @@ Les fichiers `public/styles/rox` et `public/styles/scores` conservent les styles
 globaux d'origine ; seule la feuille de l'outil actif est chargée. La langue et
 le thème sont communs à Gaia et aux outils, et enregistrés localement. Les
 langues proposées sont le français et le basque. Les
-thèmes conservent leurs couleurs propres à chaque outil. Lors du premier usage,
-les préférences existantes de GaiaScores sont reprises en priorité, puis celles
-de GaiaRox si elles sont absentes ou invalides. Ces préférences doivent être
-accessibles sur la même origine dans le navigateur : celles d'un autre domaine ne
-peuvent pas être lues automatiquement.
+thèmes conservent leurs couleurs propres à chaque outil. Seules les préférences
+`gaia.language` et `gaia.theme` sont utilisées ; les anciennes préférences des
+outils ne sont plus reprises. Sans préférence Gaia valide, la langue est le
+français et le thème est Forêt.
 
 La vignette d'événement commune (`src/app/shared/event-card.ts`) reprend
 l'apparence de GaiaScores. Chaque outil fournit son nom et ses actions :
@@ -66,7 +70,7 @@ npm run build:pages
 
 Le résultat est dans `dist/gaia-web/browser`, avec le chemin de base `/Gaia/`.
 Un fichier `404.html` identique à `index.html` permet de charger les routes
-Angular directement, notamment `/Gaia/rox/view/events` et `/Gaia/scores`.
+Angular directement, notamment `/Gaia/rox/events` et `/Gaia/scores`.
 GitHub Pages renvoie toutefois un statut HTTP 404 pour ces liens directs avant
 que l'application démarre.
 

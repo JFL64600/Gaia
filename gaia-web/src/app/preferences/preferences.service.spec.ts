@@ -5,25 +5,16 @@ import { PreferencesService } from './preferences.service';
 describe('Gaia preferences', () => {
   beforeEach(() => resetLocalStorage());
 
-  it('migrates valid Scores preferences before Rox preferences', () => {
-    localStorage.setItem('gaiascores.language', 'fr');
+  it('ignores old tool preferences and uses the Gaia defaults', () => {
+    localStorage.setItem('gaiascores.language', 'eu');
     localStorage.setItem('gaiascores.theme', 'purple');
     localStorage.setItem('gaiarox.language', 'eu');
     localStorage.setItem('gaiarox.theme', 'ocean');
     const prefs = TestBed.inject(PreferencesService);
     expect(prefs.language()).toBe('fr');
-    expect(prefs.theme()).toBe('purple');
-    expect(localStorage.getItem('gaia.language')).toBe('fr');
-    expect(localStorage.getItem('gaia.theme')).toBe('purple');
-  });
-
-  it('falls back to Rox when Scores preferences are missing or invalid', () => {
-    localStorage.setItem('gaiascores.language', 'invalid');
-    localStorage.setItem('gaiarox.language', 'eu');
-    localStorage.setItem('gaiarox.theme', 'dark');
-    const prefs = TestBed.inject(PreferencesService);
-    expect(prefs.language()).toBe('eu');
-    expect(prefs.theme()).toBe('dark');
+    expect(prefs.theme()).toBe('forest');
+    expect(localStorage.getItem('gaia.language')).toBeNull();
+    expect(localStorage.getItem('gaia.theme')).toBeNull();
   });
 
   it('restores Gaia preferences even when older tool preferences differ', () => {
@@ -48,14 +39,15 @@ describe('Gaia preferences', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
-  it('discards unsupported saved languages and uses French by default', () => {
-    for (const key of ['gaia.language', 'gaiascores.language', 'gaiarox.language']) {
-      localStorage.setItem(key, 'en');
-    }
-    expect(TestBed.inject(PreferencesService).language()).toBe('fr');
+  it('discards invalid Gaia preferences and uses the defaults', () => {
+    localStorage.setItem('gaia.language', 'en');
+    localStorage.setItem('gaia.theme', 'invalid');
+    const prefs = TestBed.inject(PreferencesService);
+    expect(prefs.language()).toBe('fr');
+    expect(prefs.theme()).toBe('forest');
     expect(document.documentElement.lang).toBe('fr');
-    for (const key of ['gaia.language', 'gaiascores.language', 'gaiarox.language']) {
-      expect(localStorage.getItem(key)).toBeNull();
-    }
+    expect(document.documentElement.getAttribute('data-theme')).toBe('forest');
+    expect(localStorage.getItem('gaia.language')).toBeNull();
+    expect(localStorage.getItem('gaia.theme')).toBeNull();
   });
 });

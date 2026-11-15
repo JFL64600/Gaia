@@ -1,10 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { resetLocalStorage } from '../../core/testing-storage';
 import { EventStore } from '../../core/event.store';
-import { I18n } from '../../core/i18n.service';
 import { routes } from '../../app.routes';
 import { DisplayModeService } from '../../../../preferences/display-mode.service';
 
@@ -15,10 +14,9 @@ describe('EventsComponent', () => {
   beforeEach(async () => {
     resetLocalStorage();
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
-    TestBed.inject(I18n).setLanguage('fr');
     store = TestBed.inject(EventStore);
     TestBed.inject(DisplayModeService).setAdmin(true);
-    harness = await RouterTestingHarness.create('/admin/events');
+    harness = await RouterTestingHarness.create('/events');
   });
 
   const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
@@ -114,8 +112,29 @@ describe('EventsComponent', () => {
   it('hides the delete action in read-only mode while keeping the event link', async () => {
     store.create('Tournoi');
     TestBed.inject(DisplayModeService).setAdmin(false);
-    await harness.navigateByUrl('/view/events');
+    await harness.fixture.whenStable();
     expect(el().querySelector('.delete-button')).toBeNull();
-    expect(el().querySelector('a.event-link')?.getAttribute('href')).toContain('/rox/view/events/');
+    expect(el().querySelector('a.event-link')?.getAttribute('href')).toContain('/rox/events/');
+    expect(TestBed.inject(Router).url).toBe('/events');
+  });
+
+  it('discards a creation form when switching to spectator without navigating', async () => {
+    el().querySelector<HTMLButtonElement>('.create-button')!.click();
+    harness.detectChanges();
+    const input = el().querySelector<HTMLInputElement>('#event-name')!;
+    input.value = 'Not submitted';
+    input.dispatchEvent(new Event('input'));
+    expect(el().querySelector('.create-panel')).not.toBeNull();
+
+    TestBed.inject(DisplayModeService).setAdmin(false);
+    await harness.fixture.whenStable();
+    expect(el().querySelector('.create-panel')).toBeNull();
+    expect(el().querySelector('.create-button')).toBeNull();
+    expect(store.events()).toHaveLength(0);
+
+    TestBed.inject(DisplayModeService).setAdmin(true);
+    await harness.fixture.whenStable();
+    expect(el().querySelector('.create-panel')).toBeNull();
+    expect(el().querySelector('.create-button')).not.toBeNull();
   });
 });

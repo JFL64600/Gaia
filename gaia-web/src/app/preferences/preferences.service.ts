@@ -7,37 +7,23 @@ export type ThemeId = (typeof THEMES)[number];
 
 function storedValue<T extends string>(
   key: string,
-  legacyKeys: readonly string[],
   allowed: readonly T[],
   fallback: T,
 ): T {
   const storage = globalThis.localStorage;
-  for (const candidateKey of [key, ...legacyKeys]) {
-    const value = storage?.getItem(candidateKey);
-    const valid = allowed.find((candidate) => candidate === value);
-    if (valid) {
-      if (candidateKey !== key) storage?.setItem(key, valid);
-      return valid;
-    }
+  const value = storage?.getItem(key);
+  const valid = allowed.find((candidate) => candidate === value);
+  if (value != null && !valid) {
+    storage?.removeItem(key);
   }
-  return fallback;
-}
-
-function storedLanguage(): Language {
-  for (const key of ['gaia.language', 'gaiascores.language', 'gaiarox.language']) {
-    const value = globalThis.localStorage?.getItem(key);
-    if (value && !LANGUAGES.some((language) => language === value)) {
-      globalThis.localStorage?.removeItem(key);
-    }
-  }
-  return storedValue('gaia.language', ['gaiascores.language', 'gaiarox.language'], LANGUAGES, 'fr');
+  return valid ?? fallback;
 }
 
 @Injectable({ providedIn: 'root' })
 export class PreferencesService {
-  private readonly languageState = signal<Language>(storedLanguage());
+  private readonly languageState = signal<Language>(storedValue('gaia.language', LANGUAGES, 'fr'));
   private readonly themeState = signal<ThemeId>(
-    storedValue('gaia.theme', ['gaiascores.theme', 'gaiarox.theme'], THEMES, 'forest'),
+    storedValue('gaia.theme', THEMES, 'forest'),
   );
   readonly language = this.languageState.asReadonly();
   readonly theme = this.themeState.asReadonly();

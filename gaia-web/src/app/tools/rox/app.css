@@ -67,36 +67,3 @@ main:has(app-events) {
   border-radius: 0.4rem;
   cursor: pointer;
 }
-
-.theme-switch {
-  position: relative;
-}
-
-.theme-switch button {
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: 2px solid var(--header-muted);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.theme-menu {
-  position: absolute;
-  top: calc(100% + 0.4rem);
-  left: 50%;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.4rem;
-  background: var(--header);
-  border: 1px solid var(--header-muted);
-  border-radius: 1rem;
-  transform: translateX(-50%);
-}
-
-.theme-menu button[aria-pressed='true'] {
-  outline: 2px solid var(--header-text);
-  outline-offset: 2px;
-}

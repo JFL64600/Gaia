@@ -8,6 +8,7 @@ import { I18n } from './core/i18n.service';
 import { attachToolStyles } from '../../tool-styles';
 import { PreferencesControls } from '../../preferences/preferences-controls';
 import { GaiaBrand } from '../../gaia-brand';
+import { DisplayModeService } from '../../preferences/display-mode.service';
 
 @Component({
   imports: [RouterOutlet, PreferencesControls, GaiaBrand],
@@ -20,6 +21,7 @@ export class App {
   protected readonly chronometerStore = inject(ChronometerStore);
   protected readonly rankingService = inject(RankingStyleService);
   protected readonly rankingStyles = RANKING_STYLES;
+  private readonly mode = inject(DisplayModeService);
 
   private readonly router = inject(Router);
   private readonly url = toSignal(
@@ -30,7 +32,7 @@ export class App {
     { initialValue: this.router.url },
   );
   protected readonly showRankingPicker = computed(
-    () => !this.rankingService.mobile() && /^\/rox\/view\/events\/[^/?#]+/.test(this.url()),
+    () => !this.mode.admin() && !this.rankingService.mobile() && /^\/rox\/events\/[^/?#]+/.test(this.url()),
   );
 
   constructor() {
@@ -39,7 +41,6 @@ export class App {
 
   protected async copyLink(): Promise<void> {
     const url = new URL(globalThis.location.href);
-    url.pathname = url.pathname.replace(/\/rox\/admin(?=\/|$)/, '/rox/view');
     await navigator.clipboard?.writeText(url.toString());
   }
 

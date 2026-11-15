@@ -43,7 +43,7 @@ describe('App', () => {
     };
     TestBed.overrideProvider(CHRONOMETER_REMOTE, { useValue: remote });
     TestBed.inject(DisplayModeService).setAdmin(true);
-    const harness = await RouterTestingHarness.create('/admin/events/event-abc123');
+    const harness = await RouterTestingHarness.create('/events/event-abc123');
     const store = TestBed.inject(ChronometerStore);
     store.add();
     store.add();
@@ -57,8 +57,8 @@ describe('App', () => {
     expect(initialIds).toHaveLength(2);
     expect(initialRenderedIds).toEqual(initialIds);
 
-    await harness.navigateByUrl('/admin/events');
-    await harness.navigateByUrl('/admin/events/event-abc123');
+    await harness.navigateByUrl('/events');
+    await harness.navigateByUrl('/events/event-abc123');
 
     const returnedIds = store.chronometers().map(({ id }) => id);
     const returnedRenderedIds = Array.from(
