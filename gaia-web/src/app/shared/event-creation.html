@@ -1,0 +1,36 @@
+<form
+  class="create-panel"
+  [attr.aria-label]="title()"
+  (submit)="onSubmit($event)"
+  (keydown.escape)="cancel.emit()"
+>
+  <div class="create-panel-heading">
+    <h2>{{ title() }}</h2>
+    <p>{{ description() }}</p>
+  </div>
+  <div class="create-panel-fields">
+    <label class="field-label" for="event-name">{{ nameLabel() }}</label>
+    <input
+      #nameInput
+      id="event-name"
+      name="eventName"
+      type="text"
+      autocomplete="off"
+      required
+      [attr.maxlength]="nameMaxLength()"
+      [disabled]="nameDisabled()"
+      [attr.placeholder]="namePlaceholder()"
+      [value]="nameValue()"
+      (input)="onNameInput($event)"
+    />
+    <ng-content />
+  </div>
+  <div class="form-actions">
+    <button class="secondary-button" type="button" [disabled]="cancelDisabled()" (click)="cancel.emit()">
+      {{ cancelLabel() }}
+    </button>
+    <button class="primary-button" type="submit" [disabled]="submitDisabled()">
+      {{ submitLabel() }}
+    </button>
+  </div>
+</form>

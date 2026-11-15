@@ -14,24 +14,23 @@
       [loading]="eventStore.loading()" [error]="eventStore.error()"
       [(query)]="searchTerm" (create)="startCreating()">
       @if (mode.admin() && creating()) {
-        <form class="create-panel" (submit)="createEvent($event)" (keydown.escape)="cancelCreating()">
-          <div class="create-panel-heading">
-            <h2>{{ i18n.t('events.new') }}</h2>
-            <p>{{ i18n.t('events.nameHint') }}</p>
-          </div>
-          <label class="field-label" for="event-name">{{ i18n.t('events.name') }}</label>
-          <input
-            id="event-name"
-            name="eventName"
-            type="text"
-            required
-            autofocus
-            maxlength="80"
-            [disabled]="saving()"
-            [attr.placeholder]="i18n.t('events.namePlaceholder')"
-            [value]="pendingName()"
-            (input)="updatePendingName($event)"
-          />
+        <gaia-event-creation
+          [title]="i18n.t('events.new')"
+          [description]="i18n.t('events.nameHint')"
+          [nameLabel]="i18n.t('events.name')"
+          [namePlaceholder]="i18n.t('events.namePlaceholder')"
+          [nameMaxLength]="nameMaxLength"
+          [nameValue]="pendingName()"
+          [nameDisabled]="saving()"
+          [focusName]="true"
+          [submitLabel]="saving() ? i18n.t('events.saving') : i18n.t('common.add')"
+          [cancelLabel]="i18n.t('common.cancel')"
+          [submitDisabled]="!validEvent() || saving()"
+          [cancelDisabled]="saving()"
+          (save)="createEvent()"
+          (cancel)="cancelCreating()"
+          (nameChange)="updatePendingName($event)"
+        >
           <label class="field-label" for="event-teams">{{ i18n.t('events.teams') }}</label>
           <input
             id="event-teams"
@@ -66,19 +65,7 @@
               }
             </div>
           </fieldset>
-          <div class="form-actions">
-            <button class="secondary-button" type="button" (click)="cancelCreating()">
-              {{ i18n.t('common.cancel') }}
-            </button>
-            <button
-              class="primary-button"
-              type="submit"
-              [disabled]="!validEvent() || saving()"
-            >
-              {{ saving() ? i18n.t('events.saving') : i18n.t('common.add') }}
-            </button>
-          </div>
-        </form>
+        </gaia-event-creation>
       }
 
     </gaia-events-page>

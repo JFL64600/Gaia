@@ -10,7 +10,7 @@ export interface GaiaEvent {
 }
 
 const EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{6,64}$/;
-export const EVENT_NAME_MAX_LENGTH = 40;
+export const EVENT_NAME_MAX_LENGTH = 80;
 
 /** Events live in Firestore only; without Firebase they exist in memory for the current page. */
 @Injectable({ providedIn: 'root' })
