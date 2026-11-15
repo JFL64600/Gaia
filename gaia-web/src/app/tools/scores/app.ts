@@ -5,11 +5,12 @@ import { attachToolStyles } from '../../tool-styles';
 import { PreferencesControls } from '../../preferences/preferences-controls';
 import { GaiaBrand } from '../../gaia-brand';
 import { EventsPage } from '../../shared/events-page';
+import { EventCreation } from '../../shared/event-creation';
 import { DisplayModeService } from '../../preferences/display-mode.service';
 
 @Component({
   selector: 'app-scores',
-  imports: [PreferencesControls, GaiaBrand, EventsPage],
+  imports: [PreferencesControls, GaiaBrand, EventsPage, EventCreation],
   templateUrl: './app.html',
 })
 export class App {
@@ -29,6 +30,7 @@ export class App {
   protected readonly searchTerm = signal('');
   protected readonly saving = signal(false);
   protected readonly games = this.eventStore.games;
+  protected readonly nameMaxLength = EVENT_NAME_MAX_LENGTH;
   protected readonly pendingTeamCount = signal<number | null>(null);
   protected readonly pendingGameIds = signal<readonly string[]>([]);
   protected readonly validEvent = computed(() => {
@@ -59,12 +61,11 @@ export class App {
     );
   }
 
-  protected updatePendingName(event: Event): void {
-    this.pendingName.set((event.target as HTMLInputElement).value.slice(0, EVENT_NAME_MAX_LENGTH));
+  protected updatePendingName(name: string): void {
+    this.pendingName.set(name.slice(0, EVENT_NAME_MAX_LENGTH));
   }
 
-  protected async createEvent(event: SubmitEvent): Promise<void> {
-    event.preventDefault();
+  protected async createEvent(): Promise<void> {
     const teamCount = this.pendingTeamCount();
     if (!this.mode.admin() || !this.validEvent() || teamCount === null || this.saving()) return;
     this.saving.set(true);

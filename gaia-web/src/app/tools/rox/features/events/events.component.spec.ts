@@ -27,13 +27,27 @@ describe('EventsComponent', () => {
     expect(el().querySelectorAll('.event-item')).toHaveLength(0);
     el().querySelector<HTMLButtonElement>('.create-button')!.click();
     harness.detectChanges();
+    expect(el().querySelector('.create-panel-heading h2')?.textContent).toContain('Nouvel événement');
+    expect(el().querySelector('.create-panel-heading p')?.textContent).toContain(
+      'Choisissez un nom pour identifier votre événement.',
+    );
+    expect(el().querySelector<HTMLInputElement>('#event-name')?.placeholder).toBe(
+      'Ex. : Tournoi de printemps',
+    );
     const input = el().querySelector<HTMLInputElement>('#event-name')!;
+    expect(input.maxLength).toBe(80);
     input.value = 'Rally';
     input.dispatchEvent(new Event('input'));
-    el().querySelector<HTMLFormElement>('.create-form')!.requestSubmit();
+    el().querySelector<HTMLFormElement>('.create-panel')!.requestSubmit();
     await harness.fixture.whenStable();
 
     expect(store.events().map(({ name }) => name)).toEqual(['Rally']);
+  });
+
+  it('allows event names up to 80 characters and truncates longer names', () => {
+    const name = 'x'.repeat(80);
+    expect(store.create(name)?.name).toBe(name);
+    expect(store.create(name + 'x')?.name).toBe(name);
   });
 
   it('creates an event with the resume option only when checked', () => {
@@ -42,7 +56,7 @@ describe('EventsComponent', () => {
     const input = el().querySelector<HTMLInputElement>('#event-name')!;
     input.value = 'Off';
     input.dispatchEvent(new Event('input'));
-    el().querySelector<HTMLFormElement>('.create-form')!.requestSubmit();
+    el().querySelector<HTMLFormElement>('.create-panel')!.requestSubmit();
     harness.detectChanges();
     expect(store.events()[0].resumeEnabled).toBe(false);
 
@@ -56,7 +70,7 @@ describe('EventsComponent', () => {
     expect(toggle.getAttribute('role')).toBe('switch');
     expect(toggle.getAttribute('aria-checked')).toBe('true');
     expect(toggle.title).toBe('Afficher le bouton Reprendre');
-    el().querySelector<HTMLFormElement>('.create-form')!.requestSubmit();
+    el().querySelector<HTMLFormElement>('.create-panel')!.requestSubmit();
 
     expect(store.find(store.events()[1].id)?.resumeEnabled).toBe(true);
     expect(store.events().map(({ resumeEnabled }) => resumeEnabled)).toEqual([false, true]);

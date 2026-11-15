@@ -1,3 +1,5 @@
+@import '../shared/event-creation.css';
+
 :root,
 :root[data-theme='forest'] {
   --text: #17231b;

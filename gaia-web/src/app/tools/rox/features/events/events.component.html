@@ -1,43 +1,37 @@
 <gaia-events-page [events]="events()" [canCreate]="!readonly" [creating]="creating()"
   (create)="startCreating()" (remove)="remove($event.id, $event.name)">
   @if (creating() && !readonly) {
-    <form
-      class="create-form"
-      [attr.aria-label]="i18n.t('events.new')"
-      (submit)="create($event)"
-      (keydown.escape)="cancelCreating()"
+    <gaia-event-creation
+      [title]="i18n.t('events.new')"
+      [description]="i18n.t('events.nameHint')"
+      [nameLabel]="i18n.t('events.name')"
+      [namePlaceholder]="i18n.t('events.namePlaceholder')"
+      [nameMaxLength]="nameMaxLength"
+      [nameValue]="pendingName()"
+      [focusName]="true"
+      [submitLabel]="i18n.t('common.add')"
+      [cancelLabel]="i18n.t('common.cancel')"
+      [submitDisabled]="!canCreate()"
+      (save)="create()"
+      (cancel)="cancelCreating()"
+      (nameChange)="updateName($event)"
     >
-      <label for="event-name">{{ i18n.t('events.name') }}</label>
-      <input
-        id="event-name"
-        name="eventName"
-        type="text"
-        autocomplete="off"
-        required
-        #nameInput
-        [attr.maxlength]="nameMaxLength"
-        [value]="pendingName()"
-        (input)="updateName($event)"
-      />
-      <button
-        class="resume-toggle"
-        name="eventResumeEnabled"
-        type="button"
-        role="switch"
-        [attr.aria-checked]="pendingResumeEnabled()"
-        [attr.aria-label]="i18n.t('events.resume')"
-        [attr.title]="i18n.t('events.resume')"
-        (click)="toggleResumeEnabled()"
-      >
-        <span class="resume-toggle-thumb" aria-hidden="true"></span>
-      </button>
-      <div class="actions">
-        <button type="submit" [disabled]="!canCreate()">{{ i18n.t('common.add') }}</button>
-        <button class="secondary" type="button" (click)="cancelCreating()">
-          {{ i18n.t('common.cancel') }}
+      <div class="resume-option">
+        <span class="field-label">{{ i18n.t('events.resume') }}</span>
+        <button
+          class="resume-toggle"
+          name="eventResumeEnabled"
+          type="button"
+          role="switch"
+          [attr.aria-checked]="pendingResumeEnabled()"
+          [attr.aria-label]="i18n.t('events.resume')"
+          [attr.title]="i18n.t('events.resume')"
+          (click)="toggleResumeEnabled()"
+        >
+          <span class="resume-toggle-thumb" aria-hidden="true"></span>
         </button>
       </div>
-    </form>
+    </gaia-event-creation>
   }
 
 </gaia-events-page>
