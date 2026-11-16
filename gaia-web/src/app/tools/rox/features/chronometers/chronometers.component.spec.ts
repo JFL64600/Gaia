@@ -4,7 +4,13 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { EventStore } from '../../core/event.store';
 import { Subject } from 'rxjs';
 import { ChronometerStore } from '../../core/chronometer.store';
-import { CHRONOMETER_CLOCK, CHRONOMETER_TIMER } from '../../core/chronometer.tokens';
+import {
+  CHRONOMETER_CLOCK,
+  CHRONOMETER_REMOTE,
+  CHRONOMETER_TIMER,
+  ChronometerRemote,
+  RemoteEvent,
+} from '../../core/chronometer.tokens';
 import { ChronometersComponent } from './chronometers.component';
 import { DisplayModeService } from '../../../../preferences/display-mode.service';
 
@@ -14,7 +20,7 @@ describe('ChronometersComponent', () => {
   let tick: Subject<void>;
   let now: number;
 
-  async function configure(resumeEnabled?: boolean): Promise<void> {
+  async function configure(resumeEnabled?: boolean, remote?: ChronometerRemote): Promise<void> {
     resetLocalStorage();
     now = 0;
     tick = new Subject<void>();
@@ -26,6 +32,7 @@ describe('ChronometersComponent', () => {
         { provide: CHRONOMETER_CLOCK, useValue: () => now },
         { provide: CHRONOMETER_TIMER, useValue: () => tick },
         { provide: ActivatedRoute, useValue: route },
+        ...(remote ? [{ provide: CHRONOMETER_REMOTE, useValue: remote }] : []),
       ],
     }).compileComponents();
 
@@ -294,6 +301,29 @@ describe('ChronometersComponent', () => {
     stopButtons()[0]?.click();
     await fixture.whenStable();
 
+    expect(resumeButtons()).toHaveLength(0);
+  });
+
+  it('updates the resume button when the saved event option arrives', async () => {
+    let updateEvents: (events: readonly RemoteEvent[]) => void = () => undefined;
+    await configure(false, {
+      connect: () => () => undefined,
+      push: () => undefined,
+      watchEvents: (onChange) => {
+        updateEvents = onChange;
+        return () => undefined;
+      },
+    });
+    await addChronometers(1);
+    const event = TestBed.inject(EventStore).events()[0];
+    expect(resumeButtons()).toHaveLength(0);
+
+    updateEvents([{ ...event, resumeEnabled: true }]);
+    await fixture.whenStable();
+    expect(resumeButtons()).toHaveLength(1);
+
+    updateEvents([{ ...event, resumeEnabled: false }]);
+    await fixture.whenStable();
     expect(resumeButtons()).toHaveLength(0);
   });
 

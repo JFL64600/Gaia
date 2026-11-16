@@ -31,8 +31,6 @@ export interface ChronometerRemote {
   push(roomId: string, snapshot: ChronometerSnapshot, onError?: (error: unknown) => void): void;
   /** Deletes the shared document of a room for every device. */
   remove?(roomId: string, onError?: (error: unknown) => void): void;
-  /** Stores the event option controlling the resume button, leaving other fields untouched. */
-  setResumeEnabled?(roomId: string, enabled: boolean, onError?: (error: unknown) => void): void;
   /** Streams the list of all shared events. Returns an unsubscribe function. */
   watchEvents?(
     onChange: (events: readonly RemoteEvent[]) => void,
