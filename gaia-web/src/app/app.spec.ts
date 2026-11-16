@@ -71,8 +71,8 @@ describe('Gaia navigation', () => {
     home.querySelector<HTMLButtonElement>('.preference-mode')!.click();
     harness.detectChanges();
     await harness.navigateByUrl('/rox/events');
-    expect(harness.routeNativeElement?.querySelector('.gaia-brand > span')?.textContent).toBe('GaiaRox');
-    expect(harness.routeNativeElement?.querySelectorAll('header a')).toHaveLength(1);
+    expect(harness.routeNativeElement?.querySelector('.gaia-brand-name')?.textContent).toBe('GaiaRox');
+    expect(harness.routeNativeElement?.querySelectorAll('header a')).toHaveLength(2);
     expect(harness.routeNativeElement?.textContent).toContain('Rox event');
     expect(harness.routeNativeElement?.querySelector('a.event-link')?.getAttribute('href'))
       .toBe('/rox/events/event-123');
@@ -82,8 +82,8 @@ describe('Gaia navigation', () => {
     expect(document.head.querySelector('link[href$="styles/rox/styles.css"]')).not.toBeNull();
 
     await harness.navigateByUrl('/scores');
-    expect(harness.routeNativeElement?.querySelector('.gaia-brand > span')?.textContent).toBe('GaiaScores');
-    expect(harness.routeNativeElement?.querySelectorAll('header a')).toHaveLength(1);
+    expect(harness.routeNativeElement?.querySelector('.gaia-brand-name')?.textContent).toBe('GaiaScores');
+    expect(harness.routeNativeElement?.querySelectorAll('header a')).toHaveLength(2);
     expect(harness.routeNativeElement?.textContent).toContain('Scores event');
     expect(document.documentElement.getAttribute('data-theme')).toBe('ocean');
     expect(document.documentElement.lang).toBe('eu');
@@ -110,6 +110,28 @@ describe('Gaia navigation', () => {
     expect(harness.routeNativeElement?.textContent).not.toContain('Choisissez un outil.');
     expect(localStorage.getItem('gaia.language')).toBe('fr');
     expect(localStorage.getItem('gaia.theme')).toBe('dark');
+  });
+
+  it('navigates from each tool name to its start while G returns to the portal', async () => {
+    const harness = await RouterTestingHarness.create('/rox/events/event-123?source=share#ranking');
+    const router = TestBed.inject(Router);
+    const roxName = harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.gaia-brand-name')!;
+    expect(roxName.getAttribute('href')).toBe('/rox');
+    roxName.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/rox/events');
+    expect(harness.routeNativeElement?.textContent).toContain('Rox event');
+
+    await harness.navigateByUrl('/scores?source=share#events');
+    const scoresName = harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.gaia-brand-name')!;
+    expect(scoresName.getAttribute('href')).toBe('/scores');
+    scoresName.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/scores');
+
+    harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.gaia-brand-mark')!.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/');
   });
 
   it('shows illustrated links with only the name of each tool', async () => {
