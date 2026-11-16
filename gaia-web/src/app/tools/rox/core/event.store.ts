@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { computed, DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { CHRONOMETER_REMOTE } from './chronometer.tokens';
 
 export interface GaiaEvent {
@@ -18,10 +18,15 @@ export class EventStore {
   private readonly remote = inject(CHRONOMETER_REMOTE);
   private readonly state = signal<readonly GaiaEvent[]>([]);
   readonly events = this.state.asReadonly();
+  private readonly watchError = signal(false);
+  private readonly writeError = signal(false);
+  readonly syncError = computed(() => this.watchError() || this.writeError());
 
   constructor() {
-    const stop = this.remote.watchEvents?.((events) =>
-      this.state.set(Object.freeze(events.filter(({ id }) => EVENT_ID_PATTERN.test(id)))),
+    const stop = this.remote.watchEvents?.(
+      (events) =>
+        this.state.set(Object.freeze(events.filter(({ id }) => EVENT_ID_PATTERN.test(id)))),
+      () => this.watchError.set(true),
     );
     if (stop) {
       inject(DestroyRef).onDestroy(stop);
@@ -35,11 +40,12 @@ export class EventStore {
     }
     const event = { id: crypto.randomUUID(), name: trimmed, resumeEnabled };
     this.state.update((events) => Object.freeze([...events, event]));
-    this.remote.push(event.id, {
-      chronometers: [],
-      name: event.name,
-    });
-    this.remote.setResumeEnabled?.(event.id, resumeEnabled);
+    this.writeError.set(false);
+    this.remote.push(
+      event.id,
+      { chronometers: [], name: event.name, resumeEnabled },
+      () => this.writeError.set(true),
+    );
     return event;
   }
 

@@ -1,3 +1,6 @@
+@if (store.syncError()) {
+  <p role="alert">{{ i18n.t('sync.error') }}</p>
+}
 <gaia-events-page [events]="events()" [canCreate]="!readonly()" [creating]="creating()"
   (create)="startCreating()" (remove)="remove($event.id, $event.name)">
   @if (creating() && !readonly()) {

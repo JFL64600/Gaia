@@ -18,6 +18,8 @@ export interface ChronometerSnapshot {
   readonly chronometers: readonly ChronometerState[];
   /** Display name of the event, shared so every device shows the same title. */
   readonly name?: string | null;
+  /** Included when creating an event; subsequent chronometer updates leave it unchanged. */
+  readonly resumeEnabled?: boolean;
 }
 
 function isInstant(value: unknown): value is number | null {

@@ -36,7 +36,7 @@ export class ChronometersComponent {
   private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
 
   private readonly eventId: string;
-  private readonly events = inject(EventStore);
+  protected readonly events = inject(EventStore);
   private readonly mode = inject(DisplayModeService);
   protected readonly readonly = computed(() => !this.mode.admin());
   protected readonly nameMaxLength = CHRONOMETER_NAME_MAX_LENGTH;

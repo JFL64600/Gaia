@@ -2,7 +2,7 @@
   [class.split]="readonly()"
   [attr.aria-label]="i18n.t('chronometers.label')"
 >
-  @if (store.syncError()) {
+  @if (store.syncError() || events.syncError()) {
     <p class="sync-error" role="alert">{{ i18n.t('sync.error') }}</p>
   }
   @if (readonly() && !started()) {

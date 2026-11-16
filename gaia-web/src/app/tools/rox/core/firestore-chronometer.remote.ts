@@ -75,21 +75,10 @@ export class FirestoreChronometerRemote implements ChronometerRemote {
           {
             chronometers: snapshot.chronometers,
             name: snapshot.name ?? null,
+            ...(snapshot.resumeEnabled === undefined ? {} : { resumeEnabled: snapshot.resumeEnabled }),
           },
           { merge: true },
         ),
-      )
-      .catch(onError);
-  }
-
-  setResumeEnabled(
-    roomId: string,
-    enabled: boolean,
-    onError: (error: unknown) => void = () => undefined,
-  ): void {
-    Promise.all([this.getFirestore(), import('firebase/firestore')])
-      .then(([firestore, { doc, setDoc }]) =>
-        setDoc(doc(firestore, 'events', roomId), { resumeEnabled: enabled }, { merge: true }),
       )
       .catch(onError);
   }
