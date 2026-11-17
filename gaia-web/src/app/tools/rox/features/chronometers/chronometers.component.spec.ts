@@ -13,6 +13,7 @@ import {
 } from '../../core/chronometer.tokens';
 import { ChronometersComponent } from './chronometers.component';
 import { DisplayModeService } from '../../../../preferences/display-mode.service';
+import { vi } from 'vitest';
 
 describe('ChronometersComponent', () => {
   let fixture: ComponentFixture<ChronometersComponent>;
@@ -63,7 +64,15 @@ describe('ChronometersComponent', () => {
   }
 
   function resumeButtons(): HTMLButtonElement[] {
-    return cardButtons(3);
+    return Array.from(
+      element().querySelectorAll<HTMLButtonElement>('.chronometer-card .icon-button'),
+    ).filter((button) => button.getAttribute('aria-label')?.startsWith('Reprendre'));
+  }
+
+  function deleteButtons(): HTMLButtonElement[] {
+    return Array.from(
+      element().querySelectorAll<HTMLButtonElement>('.chronometer-card .delete-chronometer'),
+    );
   }
 
   function times(): (string | undefined)[] {
@@ -349,5 +358,47 @@ describe('ChronometersComponent', () => {
     await fixture.whenStable();
 
     expect(times()).toEqual(['00:01.650', '00:09.400']);
+  });
+
+  it('confirms deletion of a chronometer and leaves the other cards intact', async () => {
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true),
+    );
+    await configure();
+    await addChronometers(2);
+
+    expect(deleteButtons()).toHaveLength(2);
+    expect(deleteButtons()[0].getAttribute('aria-label')).toBe('Supprimer Racer 1');
+    deleteButtons()[0].click();
+    await fixture.whenStable();
+
+    expect(globalThis.confirm).toHaveBeenCalledWith('Supprimer le chronomètre « Racer 1 » ?');
+    expect(store.chronometers().map(({ name }) => name)).toEqual(['Racer 2']);
+    expect(element().querySelectorAll('.chronometer-card')).toHaveLength(1);
+  });
+
+  it('keeps the chronometer when deletion is cancelled', async () => {
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false),
+    );
+    await configure();
+    await addChronometers(1);
+
+    deleteButtons()[0].click();
+    await fixture.whenStable();
+
+    expect(store.chronometers().map(({ name }) => name)).toEqual(['Racer 1']);
+    expect(element().querySelectorAll('.chronometer-card')).toHaveLength(1);
+  });
+
+  it('does not render a delete action in read-only mode', async () => {
+    await configure();
+    await addChronometers(1);
+    TestBed.inject(DisplayModeService).setAdmin(false);
+    await fixture.whenStable();
+
+    expect(element().querySelector('.chronometer-card .icon-button')).toBeNull();
   });
 });

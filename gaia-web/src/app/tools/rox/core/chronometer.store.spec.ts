@@ -282,6 +282,26 @@ describe('ChronometerStore', () => {
     expect(harness.store.chronometers()[0]?.stopInstant).toBe(1_000);
   });
 
+  it('removes one chronometer, publishes the remaining state and stops ticking when none run', () => {
+    const harness = createHarness();
+    harness.store.add();
+    harness.store.add();
+    harness.startAll();
+    expect(harness.tick.observed).toBe(true);
+
+    harness.store.remove('chronometer-1');
+
+    expect(harness.store.chronometers().map(({ id }) => id)).toEqual(['chronometer-2']);
+    expect(harness.tick.observed).toBe(true);
+
+    harness.store.remove('chronometer-2');
+
+    expect(harness.store.chronometers()).toEqual([]);
+    expect(harness.tick.observed).toBe(false);
+    harness.store.remove('unknown');
+    expect(harness.store.chronometers()).toEqual([]);
+  });
+
   it('tears down ticking after every entry stops', () => {
     const harness = createHarness();
     harness.store.add();
