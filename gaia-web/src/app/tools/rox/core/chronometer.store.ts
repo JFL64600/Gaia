@@ -269,6 +269,17 @@ export class ChronometerStore {
     this.syncTicking();
     this.publish();
   }
+
+  remove(id: string): void {
+    const entries = this.entries();
+    if (!entries.some((entry) => entry.id === id)) {
+      return;
+    }
+
+    this.entries.set(Object.freeze(entries.filter((entry) => entry.id !== id)));
+    this.syncTicking();
+    this.publish();
+  }
 }
 
 export function formatElapsed(elapsedMilliseconds: number): string {

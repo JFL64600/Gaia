@@ -114,6 +114,13 @@ export class ChronometersComponent {
     this.store.resumeOne(id);
   }
 
+  protected remove(id: string, name: string): void {
+    if (this.readonly()) return;
+    if (globalThis.confirm?.(this.i18n.t('chronometer.confirmDelete', { name })) ?? true) {
+      this.store.remove(id);
+    }
+  }
+
   protected readonly leaving = signal<ReadonlySet<string>>(new Set());
   private visibleIds = new Set<string>();
 

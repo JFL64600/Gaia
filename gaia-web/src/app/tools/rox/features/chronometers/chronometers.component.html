@@ -66,6 +66,17 @@
           [class.leaving]="leaving().has(chronometer.id)"
           [attr.id]="chronometer.id"
         >
+          @if (!readonly()) {
+            <button
+              class="delete-chronometer"
+              type="button"
+              [attr.aria-label]="i18n.t('chronometer.deleteNamed', { name: chronometer.name })"
+              [attr.title]="i18n.t('chronometer.delete')"
+              (click)="remove(chronometer.id, chronometer.name)"
+            >
+              <span aria-hidden="true">−</span>
+            </button>
+          }
           <h2>{{ chronometer.name }}</h2>
           <output
             class="time"

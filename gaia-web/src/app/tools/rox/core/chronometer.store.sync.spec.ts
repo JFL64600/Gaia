@@ -54,6 +54,17 @@ describe('ChronometerStore cloud sync', () => {
     expect(pushes.at(-1)?.snapshot.chronometers[0].status).toBe('running');
   });
 
+  it('publishes the collection after a chronometer is removed', () => {
+    store.joinRoom('room-123');
+    store.add('A');
+    store.remove(store.chronometers()[0].id);
+
+    expect(pushes.at(-1)).toEqual({
+      roomId: 'room-123',
+      snapshot: { chronometers: [], name: null },
+    });
+  });
+
   it('applies remote state without echoing it back', () => {
     store.joinRoom('room-123');
     emit({
