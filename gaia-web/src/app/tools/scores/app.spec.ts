@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { DisplayModeService } from '../../preferences/display-mode.service';
 import { afterEach, vi } from 'vitest';
 import { resetLocalStorage } from '../rox/core/testing-storage';
+import { PreferencesService } from '../../preferences/preferences.service';
 
 const GAMES: readonly Game[] = [
   { code: 'Arpana', label: 'Arpana', role: 'Time' },
@@ -171,7 +172,11 @@ describe('App', () => {
     expect(remote.created).toHaveLength(0);
   });
 
-  it('lets admins delete an event immediately when clicking the trash button', async () => {
+  it.each([
+    ['fr', 'Supprimer l’évènement « Tournoi Gaia » ?'],
+    ['eu', '"Tournoi Gaia" ekitaldia ezabatu?'],
+  ] as const)('confirms event deletion in %s before deleting', async (language, message) => {
+    TestBed.inject(PreferencesService).setLanguage(language);
     const mode = TestBed.inject(DisplayModeService);
     mode.setAdmin(true);
     const fixture = TestBed.createComponent(App);
@@ -180,17 +185,34 @@ describe('App', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
-    const confirm = vi.fn();
+    const confirm = vi.fn(() => true);
     vi.stubGlobal('confirm', confirm);
     element.querySelector<HTMLButtonElement>('.delete-button')!.click();
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(confirm).not.toHaveBeenCalled();
+    expect(confirm).toHaveBeenCalledExactlyOnceWith(message);
     expect(remote.removed).toEqual([event!.id]);
     expect(store.events()).toHaveLength(0);
-    expect(element.querySelector('.empty-state h2')?.textContent).toContain(
-      'Aucun évènement pour le moment',
-    );
+    expect(element.querySelector('.delete-button')).toBeNull();
+  });
+
+  it('keeps the event without requesting deletion when confirmation is cancelled', async () => {
+    TestBed.inject(DisplayModeService).setAdmin(true);
+    const fixture = TestBed.createComponent(App);
+    const store = TestBed.inject(EventStore);
+    const event = await store.create('Tournoi Gaia', 2, ['Arpana']);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal('confirm', confirm);
+
+    element.querySelector<HTMLButtonElement>('.delete-button')!.click();
+    await fixture.whenStable();
+
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(remote.removed).toEqual([]);
+    expect(store.events()).toEqual([event]);
+    expect(element.querySelector('.delete-button')).not.toBeNull();
   });
 
   it('hides deletion for spectators and surfaces deletion errors', async () => {
@@ -205,6 +227,7 @@ describe('App', () => {
     const mode = TestBed.inject(DisplayModeService);
     mode.setAdmin(true);
     remote.removeFailure = new Error('permission-denied');
+    vi.stubGlobal('confirm', () => true);
     fixture.detectChanges();
     element.querySelector<HTMLButtonElement>('.delete-button')!.click();
     await fixture.whenStable();

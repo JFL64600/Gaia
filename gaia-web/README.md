@@ -50,7 +50,7 @@ français et le thème est Forêt.
 La vignette d'événement commune (`src/app/shared/event-card.ts`) reprend
 l'apparence de GaiaScores. Chaque outil fournit son nom et ses actions :
 Rox conserve son lien et la suppression confirmée en administration, sans afficher son code ;
-Scores reste en consultation sans action de suppression.
+Scores propose également une suppression confirmée en administration.
 La page commune (`src/app/shared/events-page.ts`) gère le titre, la recherche,
 le compteur, la liste et ses états, sans sous-titre. Les outils y intègrent leurs
 propres formulaires de création et conservent leurs services Firestore.
@@ -105,8 +105,8 @@ le projet de l'autre. Les règles existantes ne protègent pas les accès admini
 le mode lecture seule de GaiaRox est une fonctionnalité d'interface, pas une authentification.
 
 Dans GaiaScores, le mode administrateur sélectionné depuis le portail affiche une
-poubelle qui demande directement la suppression du document de l'évènement, sans
-confirmation. La suppression doit être autorisée par les règles du projet
+poubelle qui demande confirmation avant la suppression du document de l'évènement,
+comme dans Rox. La suppression doit être autorisée par les règles du projet
 `gaiascores` : les règles actuelles communiquées pour ce projet ne l'autorisent pas.
 Un refus Firestore reste affiché même après une nouvelle synchronisation.
 La sous-collection `teams` n'est pas supprimée par cet appel ; son nettoyage reste

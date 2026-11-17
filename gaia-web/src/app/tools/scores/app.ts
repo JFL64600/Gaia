@@ -92,6 +92,8 @@ export class App {
 
   protected removeEvent(event: EventListItem): void {
     if (!this.mode.admin()) return;
-    void this.eventStore.remove(event.id);
+    if (globalThis.confirm?.(this.i18n.t('events.confirmDelete', { name: event.name })) ?? true) {
+      void this.eventStore.remove(event.id);
+    }
   }
 }
