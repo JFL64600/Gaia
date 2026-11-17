@@ -6,6 +6,8 @@ import { FIREBASE_CONFIG } from './tools/rox/core/firebase.config';
 import { FirestoreChronometerRemote } from './tools/rox/core/firestore-chronometer.remote';
 import { EVENTS_REMOTE } from './tools/scores/core/events.remote';
 import { FirebaseEventsRemote } from './tools/scores/core/firebase-events.remote';
+import { AXT_EVENTS_REMOTE } from './tools/axt/core/events.remote';
+import { FirebaseAxtEventsRemote } from './tools/axt/core/firebase-events.remote';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,5 +17,6 @@ export const appConfig: ApplicationConfig = {
       ? [{ provide: CHRONOMETER_REMOTE, useExisting: FirestoreChronometerRemote }]
       : []),
     { provide: EVENTS_REMOTE, useExisting: FirebaseEventsRemote },
+    { provide: AXT_EVENTS_REMOTE, useExisting: FirebaseAxtEventsRemote },
   ],
 };

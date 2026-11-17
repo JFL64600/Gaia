@@ -6,6 +6,7 @@ import { CHRONOMETER_REMOTE, ChronometerRemote } from './tools/rox/core/chronome
 import { EVENTS_REMOTE, EventsRemote } from './tools/scores/core/events.remote';
 import { DisplayModeService } from './preferences/display-mode.service';
 import { ChronometerStore } from './tools/rox/core/chronometer.store';
+import { AXT_EVENTS_REMOTE, AxtEvent, AxtEventsRemote } from './tools/axt/core/events.remote';
 import { vi } from 'vitest';
 
 const roxRemote: ChronometerRemote = {
@@ -33,14 +34,33 @@ const scoresRemote: EventsRemote = {
   remove: async () => undefined,
 };
 
+let axtEvents: AxtEvent[] = [];
+const axtListeners = new Set<(events: readonly AxtEvent[]) => void>();
+const axtRemote: AxtEventsRemote = {
+  watchEvents: (onChange) => {
+    axtListeners.add(onChange);
+    onChange(axtEvents);
+    return () => axtListeners.delete(onChange);
+  },
+  create: async (event) => {
+    const id = 'axt-created';
+    axtEvents = [...axtEvents, { id, ...event }];
+    axtListeners.forEach((onChange) => onChange(axtEvents));
+    return id;
+  },
+};
+
 describe('Gaia navigation', () => {
   beforeEach(() => {
     localStorage.clear();
+    axtEvents = [{ id: 'axt-123', name: 'Andde Xoko', playerCount: 12 }];
+    axtListeners.clear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
         { provide: CHRONOMETER_REMOTE, useValue: roxRemote },
         { provide: EVENTS_REMOTE, useValue: scoresRemote },
+        { provide: AXT_EVENTS_REMOTE, useValue: axtRemote },
       ],
     });
   });
@@ -90,6 +110,13 @@ describe('Gaia navigation', () => {
     expect(document.documentElement.lang).toBe('eu');
     expect(document.head.querySelector('link[href$="styles/rox/styles.css"]')).toBeNull();
     expect(document.head.querySelector('link[href$="styles/scores/styles.css"]')).not.toBeNull();
+    await harness.navigateByUrl('/axt');
+    expect(harness.routeNativeElement?.querySelector('.gaia-brand-name')?.textContent)
+      .toBe('AnddeXokoTxapelketa');
+    expect(harness.routeNativeElement?.textContent).toContain('Andde Xoko');
+    expect(harness.routeNativeElement?.querySelector('a.event-link')?.getAttribute('href'))
+      .toBe('/axt/events/axt-123');
+    expect(document.head.querySelector('link[href$="styles/axt/styles.css"]')).not.toBeNull();
     const scores = harness.routeNativeElement as HTMLElement;
     scores.querySelector<HTMLButtonElement>('.preference-languages button[lang="fr"]')!.click();
     scores.querySelector<HTMLButtonElement>('.preference-trigger')!.click();
@@ -139,17 +166,50 @@ describe('Gaia navigation', () => {
     const harness = await RouterTestingHarness.create('/');
     const home = harness.routeNativeElement as HTMLElement;
     const links = Array.from(home.querySelectorAll<HTMLAnchorElement>('nav > a'));
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/rox', '/scores']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/scores', '/axt', '/rox']);
     expect(links.map((link) => link.querySelector('img')?.getAttribute('src')))
-      .toEqual(['images/home-rox.svg', 'images/home-scores.svg']);
+      .toEqual(['images/home-scores.svg', 'images/home-axt.svg', 'images/home-rox.svg']);
     expect(links.every((link) => link.querySelector('img')?.getAttribute('alt') === '')).toBe(true);
     expect(links.map((link) => link.querySelector('.tile-label')?.textContent?.trim()))
-      .toEqual(['GaiaRox', 'GaiaScores']);
+      .toEqual(['GaiaScores', 'AnddeXokoTxapelketa', 'GaiaRox']);
+    expect(Array.from(links[1].querySelectorAll('.axt-label span'), (line) => line.textContent))
+      .toEqual(['Andde', 'Xoko', 'Txapelketa']);
     home.querySelector<HTMLButtonElement>('.preference-languages button[lang="eu"]')!.click();
     harness.detectChanges();
     expect(home.querySelector('nav')?.getAttribute('aria-label')).toBe('Gaia tresnak');
     expect(links.map((link) => link.querySelector('.tile-label')?.textContent?.trim()))
-      .toEqual(['GaiaRox', 'GaiaScores']);
+      .toEqual(['GaiaScores', 'AnddeXokoTxapelketa', 'GaiaRox']);
+  });
+
+  it('creates an AXT event and exposes its shareable detail link', async () => {
+    TestBed.inject(DisplayModeService).setAdmin(true);
+    const harness = await RouterTestingHarness.create('/axt');
+    const page = harness.routeNativeElement as HTMLElement;
+    page.querySelector<HTMLButtonElement>('.create-button')!.click();
+    harness.detectChanges();
+
+    const name = page.querySelector<HTMLInputElement>('#event-name')!;
+    name.value = '  Finala  ';
+    name.dispatchEvent(new Event('input'));
+    const playerCount = page.querySelector<HTMLInputElement>('#event-players')!;
+    playerCount.value = '18';
+    playerCount.dispatchEvent(new Event('input'));
+    harness.detectChanges();
+    expect(page.querySelector<HTMLButtonElement>('.create-panel button[type="submit"]')?.disabled)
+      .toBe(false);
+    page.querySelector<HTMLButtonElement>('.create-panel button[type="submit"]')!.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page.querySelector('.create-panel')).toBeNull();
+    expect(axtEvents.at(-1)).toEqual({ id: 'axt-created', name: 'Finala', playerCount: 18 });
+    expect(page.querySelector('a.event-link[href="/axt/events/axt-created"]')).not.toBeNull();
+    await harness.navigateByUrl('/axt/events/axt-created');
+    expect(harness.routeNativeElement?.querySelector('#event-title')?.textContent).toBe('Finala');
+    expect(harness.routeNativeElement?.textContent).toContain('18');
+    expect(harness.routeNativeElement?.querySelector('.share-link')?.getAttribute('href'))
+      .toContain('/axt/events/axt-created');
+    expect(axtEvents.at(-1)).toEqual({ id: 'axt-created', name: 'Finala', playerCount: 18 });
   });
 
   it('opens the shared event URL in spectator mode and ignores the old room parameter', async () => {
@@ -319,10 +379,10 @@ describe('Gaia navigation', () => {
     }
   });
 
-  it('shares the mode across the portal and both tools without a separate admin card', async () => {
+  it('shares the mode across the portal and all tools without a separate admin card', async () => {
     const harness = await RouterTestingHarness.create('/');
     const home = harness.routeNativeElement!;
-    expect(home.querySelectorAll('nav > a')).toHaveLength(2);
+    expect(home.querySelectorAll('nav > a')).toHaveLength(3);
     const toggle = home.querySelector<HTMLButtonElement>('.preference-mode')!;
     expect(toggle.getAttribute('aria-checked')).toBe('false');
     expect(toggle.title).toBe('Spectateur');
@@ -333,7 +393,7 @@ describe('Gaia navigation', () => {
     harness.detectChanges();
     expect(toggle.title).toBe('Administrateur');
     expect(toggle.getAttribute('aria-checked')).toBe('true');
-    expect(home.querySelector('nav > a')?.getAttribute('href')).toBe('/rox');
+    expect(home.querySelector('nav > a')?.getAttribute('href')).toBe('/scores');
 
     await harness.navigateByUrl('/scores');
     expect(harness.routeNativeElement?.querySelector('.preference-mode')).toBeNull();

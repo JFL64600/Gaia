@@ -37,6 +37,8 @@ export class App {
     this.eventStore.events().map((event) => ({
       id: event.id,
       name: event.name,
+      link: `/scores/events/${event.id}`,
+      openLabel: this.i18n.t('events.open', { name: event.name }),
       deleteLabel: this.mode.admin() ? this.i18n.t('events.delete', { name: event.name }) : undefined,
     })),
   );

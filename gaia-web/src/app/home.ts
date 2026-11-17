@@ -19,14 +19,21 @@ const TEXT = {
     </header>
     <main>
       <nav [attr.aria-label]="text().tools">
-        <a routerLink="/rox">
-          <img src="images/home-rox.svg" alt="" />
-          <span class="tile-label"><strong>GaiaRox</strong></span>
-          <span class="tile-arrow" aria-hidden="true">↗</span>
-        </a>
         <a routerLink="/scores">
           <img src="images/home-scores.svg" alt="" />
           <span class="tile-label"><strong>GaiaScores</strong></span>
+          <span class="tile-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a routerLink="/axt">
+          <img src="images/home-axt.svg" alt="" />
+          <span class="tile-label">
+            <strong class="axt-label"><span>Andde</span><span>Xoko</span><span>Txapelketa</span></strong>
+          </span>
+          <span class="tile-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a routerLink="/rox">
+          <img src="images/home-rox.svg" alt="" />
+          <span class="tile-label"><strong>GaiaRox</strong></span>
           <span class="tile-arrow" aria-hidden="true">↗</span>
         </a>
       </nav>
@@ -47,6 +54,7 @@ const TEXT = {
     nav img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .tile-label { position: absolute; inset: auto 0 0; padding: 4rem 1.5rem 1.4rem; background: linear-gradient(transparent, #071b17e8); }
     .tile-label strong { font-size: clamp(1.4rem, 3vw, 2.3rem); letter-spacing: -.03em; }
+    .tile-label strong.axt-label, .tile-label strong.axt-label span { display: block; }
     .tile-arrow { position: absolute; right: 1.5rem; bottom: 1.5rem; font-size: 1.4rem; }
     @media (max-width: 50rem) { nav:has(> a:nth-child(3)) a { flex-basis: calc((100% - 1.125rem) / 2); } }
     @media (max-width: 37rem) {
