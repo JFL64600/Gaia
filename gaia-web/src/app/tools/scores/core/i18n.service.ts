@@ -15,6 +15,7 @@ const MESSAGES = {
     'events.nameHint': 'Choisissez un nom pour identifier votre évènement.',
     'events.namePlaceholder': 'Ex. : Tournoi de printemps',
     'events.saving': 'Enregistrement…',
+    'events.delete': 'Supprimer {name}',
     'common.add': 'Ajouter',
     'common.cancel': 'Annuler',
   },
@@ -31,6 +32,7 @@ const MESSAGES = {
     'events.nameHint': 'Aukeratu izen bat zure ekitaldia identifikatzeko.',
     'events.namePlaceholder': 'Adibidez: Udaberriko txapelketa',
     'events.saving': 'Gordetzen…',
+    'events.delete': 'Ezabatu {name}',
     'common.add': 'Gehitu',
     'common.cancel': 'Utzi',
   },
@@ -43,7 +45,9 @@ export class I18n {
   private readonly preferences = inject(PreferencesService);
   readonly language = this.preferences.language;
 
-  t(key: MessageKey): string {
-    return MESSAGES[this.language()][key];
+  t(key: MessageKey, params: Record<string, string | number> = {}): string {
+    return MESSAGES[this.language()][key].replace(/\{(\w+)\}/g, (placeholder, name: string) =>
+      String(params[name] ?? placeholder),
+    );
   }
 }

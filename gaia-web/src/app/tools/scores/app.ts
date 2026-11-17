@@ -4,7 +4,7 @@ import { I18n } from './core/i18n.service';
 import { attachToolStyles } from '../../tool-styles';
 import { PreferencesControls } from '../../preferences/preferences-controls';
 import { GaiaBrand } from '../../gaia-brand';
-import { EventsPage } from '../../shared/events-page';
+import { EventListItem, EventsPage } from '../../shared/events-page';
 import { EventCreation } from '../../shared/event-creation';
 import { DisplayModeService } from '../../preferences/display-mode.service';
 
@@ -33,6 +33,13 @@ export class App {
   protected readonly nameMaxLength = EVENT_NAME_MAX_LENGTH;
   protected readonly pendingTeamCount = signal<number | null>(null);
   protected readonly pendingGameIds = signal<readonly string[]>([]);
+  protected readonly events = computed<readonly EventListItem[]>(() =>
+    this.eventStore.events().map((event) => ({
+      id: event.id,
+      name: event.name,
+      deleteLabel: this.mode.admin() ? this.i18n.t('events.delete', { name: event.name }) : undefined,
+    })),
+  );
   protected readonly validEvent = computed(() => {
     const count = this.pendingTeamCount();
     return !!this.pendingName().trim() && count !== null &&
@@ -83,4 +90,8 @@ export class App {
     }
   }
 
+  protected removeEvent(event: EventListItem): void {
+    if (!this.mode.admin()) return;
+    void this.eventStore.remove(event.id);
+  }
 }

@@ -104,6 +104,14 @@ restent gérés dans les dépôts d'origine ; ne pas déployer les règles de l'
 le projet de l'autre. Les règles existantes ne protègent pas les accès administrateur :
 le mode lecture seule de GaiaRox est une fonctionnalité d'interface, pas une authentification.
 
+Dans GaiaScores, le mode administrateur sélectionné depuis le portail affiche une
+poubelle qui demande directement la suppression du document de l'évènement, sans
+confirmation. La suppression doit être autorisée par les règles du projet
+`gaiascores` : les règles actuelles communiquées pour ce projet ne l'autorisent pas.
+Un refus Firestore reste affiché même après une nouvelle synchronisation.
+La sous-collection `teams` n'est pas supprimée par cet appel ; son nettoyage reste
+à prévoir pour un effacement complet. Aucune règle Firebase n'est modifiée ici.
+
 ### Piste future pour l'accès administrateur
 
 Idée conservée pour plus tard, non retenue pour la première version : proposer

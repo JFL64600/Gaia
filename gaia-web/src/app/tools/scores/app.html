@@ -10,9 +10,9 @@
   </header>
 
   <main class="content">
-    <gaia-events-page [events]="eventStore.events()" [creating]="creating()" [canCreate]="mode.admin()"
+    <gaia-events-page [events]="events()" [creating]="creating()" [canCreate]="mode.admin()"
       [loading]="eventStore.loading()" [error]="eventStore.error()"
-      [(query)]="searchTerm" (create)="startCreating()">
+      [(query)]="searchTerm" (create)="startCreating()" (remove)="removeEvent($event)">
       @if (mode.admin() && creating()) {
         <gaia-event-creation
           [title]="i18n.t('events.new')"
