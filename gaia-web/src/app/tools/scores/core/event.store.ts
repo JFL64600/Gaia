@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { computed, DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { EVENTS_REMOTE } from './events.remote';
 import { Game } from './games';
 
@@ -30,19 +30,21 @@ export class EventStore {
   readonly events = signal<readonly ScoreEvent[]>([]);
   readonly games = signal<readonly Game[]>([]);
   readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
+  private readonly watchError = signal<string | null>(null);
+  private readonly writeError = signal<string | null>(null);
+  readonly error = computed(() => this.writeError() ?? this.watchError());
 
   constructor() {
     const reportError = (error: unknown) => {
       this.loading.set(false);
-      this.error.set(error instanceof Error ? error.message : String(error));
+      this.watchError.set(error instanceof Error ? error.message : String(error));
     };
     const stopGames = this.remote.watchGames((games) => this.games.set(games), reportError);
     const stopEvents = this.remote.watchEvents(
       (events) => {
         this.events.set(events);
         this.loading.set(false);
-        this.error.set(null);
+        this.watchError.set(null);
       },
       reportError,
     );
@@ -63,11 +65,11 @@ export class EventStore {
         !Number.isSafeInteger(teamCount) || teamCount <= 0 || teamCount > MAX_TEAM_COUNT ||
         gameIds.length === 0 || !gameIds.every((gameId) => knownGames.has(gameId)) ||
         new Set(gameIds).size !== gameIds.length) {
-      this.error.set('Invalid event: name, team count between 1 and 100 and at least one valid game are required.');
+      this.writeError.set('Invalid event: name, team count between 1 and 100 and at least one valid game are required.');
       return null;
     }
 
-    this.error.set(null);
+    this.writeError.set(null);
     try {
       const event: NewScoreEvent = {
         name: normalizedName,
@@ -81,8 +83,18 @@ export class EventStore {
       const id = await this.remote.create(event);
       return { id, name: event.name, teamCount, gameIds: event.gameIds };
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : String(error));
+      this.writeError.set(error instanceof Error ? error.message : String(error));
       return null;
+    }
+  }
+
+  async remove(id: string): Promise<void> {
+    this.writeError.set(null);
+    try {
+      await this.remote.remove(id);
+      this.events.update((events) => events.filter((event) => event.id !== id));
+    } catch (error) {
+      this.writeError.set(error instanceof Error ? error.message : String(error));
     }
   }
 }

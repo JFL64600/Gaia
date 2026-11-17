@@ -30,6 +30,7 @@ const scoresRemote: EventsRemote = {
     return () => undefined;
   },
   create: async () => 'score-123',
+  remove: async () => undefined,
 };
 
 describe('Gaia navigation', () => {
@@ -350,6 +351,7 @@ describe('Gaia navigation', () => {
     harness.detectChanges();
     expect(returnedToggle.title).toBe('Spectateur');
     await harness.navigateByUrl('/scores');
+    expect(harness.routeNativeElement?.querySelector('.preference-mode')).toBeNull();
     expect(harness.routeNativeElement?.querySelector('.create-button')).toBeNull();
     expect(TestBed.inject(DisplayModeService).admin()).toBe(false);
   });

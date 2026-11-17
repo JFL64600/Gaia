@@ -5,6 +5,8 @@ import { Game } from './core/games';
 import { App } from './app';
 import { provideRouter } from '@angular/router';
 import { DisplayModeService } from '../../preferences/display-mode.service';
+import { afterEach, vi } from 'vitest';
+import { resetLocalStorage } from '../rox/core/testing-storage';
 
 const GAMES: readonly Game[] = [
   { code: 'Arpana', label: 'Arpana', role: 'Time' },
@@ -15,7 +17,9 @@ class MemoryEventsRemote implements EventsRemote {
   private events: ScoreEvent[] = [];
   private onEvents?: (events: readonly ScoreEvent[]) => void;
   failure?: Error;
+  removeFailure?: Error;
   created: NewScoreEvent[] = [];
+  removed: string[] = [];
 
   watchGames(onGames: (games: readonly Game[]) => void): () => void {
     onGames(GAMES);
@@ -40,18 +44,34 @@ class MemoryEventsRemote implements EventsRemote {
     this.onEvents?.(this.events);
     return id;
   }
+
+  async remove(id: string): Promise<void> {
+    if (this.removeFailure) {
+      throw this.removeFailure;
+    }
+    this.removed.push(id);
+    this.events = this.events.filter((event) => event.id !== id);
+    this.onEvents?.(this.events);
+  }
+
+  emitEvents(): void {
+    this.onEvents?.(this.events);
+  }
 }
 
 describe('App', () => {
   let remote: MemoryEventsRemote;
 
   beforeEach(async () => {
+    resetLocalStorage();
     remote = new MemoryEventsRemote();
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideRouter([]), { provide: EVENTS_REMOTE, useValue: remote }],
     }).compileComponents();
   });
+
+  afterEach(() => vi.unstubAllGlobals());
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
@@ -124,7 +144,7 @@ describe('App', () => {
     expect(localStorage.getItem('gaia.theme')).toBe('ocean');
   });
 
-  it('starts in spectator mode and discards an open creation form when admin is disabled', async () => {
+  it('starts in spectator mode and discards an open form when admin is disabled', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
@@ -134,18 +154,65 @@ describe('App', () => {
 
     mode.setAdmin(true);
     fixture.detectChanges();
+    expect(mode.admin()).toBe(true);
     element.querySelector<HTMLButtonElement>('.create-button')!.click();
     fixture.detectChanges();
     expect(element.querySelector('.create-panel')).not.toBeNull();
 
     mode.setAdmin(false);
     fixture.detectChanges();
+    expect(mode.admin()).toBe(false);
     expect(element.querySelector('.create-panel')).toBeNull();
     expect(element.querySelector('.create-button')).toBeNull();
     mode.setAdmin(true);
     fixture.detectChanges();
+    expect(mode.admin()).toBe(true);
     expect(element.querySelector('.create-panel')).toBeNull();
     expect(remote.created).toHaveLength(0);
+  });
+
+  it('lets admins delete an event immediately when clicking the trash button', async () => {
+    const mode = TestBed.inject(DisplayModeService);
+    mode.setAdmin(true);
+    const fixture = TestBed.createComponent(App);
+    const store = TestBed.inject(EventStore);
+    const event = await store.create('Tournoi Gaia', 2, ['Arpana']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const confirm = vi.fn();
+    vi.stubGlobal('confirm', confirm);
+    element.querySelector<HTMLButtonElement>('.delete-button')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(confirm).not.toHaveBeenCalled();
+    expect(remote.removed).toEqual([event!.id]);
+    expect(store.events()).toHaveLength(0);
+    expect(element.querySelector('.empty-state h2')?.textContent).toContain(
+      'Aucun évènement pour le moment',
+    );
+  });
+
+  it('hides deletion for spectators and surfaces deletion errors', async () => {
+    const store = TestBed.inject(EventStore);
+    await store.create('Tournoi Gaia', 2, ['Arpana']);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.delete-button')).toBeNull();
+
+    const mode = TestBed.inject(DisplayModeService);
+    mode.setAdmin(true);
+    remote.removeFailure = new Error('permission-denied');
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.delete-button')!.click();
+    await fixture.whenStable();
+    remote.emitEvents();
+    fixture.detectChanges();
+
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain('permission-denied');
+    expect(store.events()).toHaveLength(1);
   });
 
   it('trims event names and ignores blank names', async () => {

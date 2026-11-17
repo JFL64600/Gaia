@@ -12,6 +12,7 @@ export interface EventsRemote {
     onError: (error: unknown) => void,
   ): () => void;
   create(event: NewScoreEvent): Promise<string>;
+  remove(id: string): Promise<void>;
 }
 
 export const EVENTS_REMOTE = new InjectionToken<EventsRemote>('EVENTS_REMOTE');

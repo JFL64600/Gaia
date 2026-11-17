@@ -56,9 +56,15 @@ export class FirebaseEventsRemote implements EventsRemote {
         const order: QueryConstraint = firestoreSdk.orderBy(orderField, direction);
         unsubscribe = firestoreSdk.onSnapshot(
           firestoreSdk.query(firestoreSdk.collection(firestore, collection), order),
-          (snapshot) => onDocs(snapshot.docs.map((document) => ({
-            id: document.id, data: document.data(),
-          }))),
+          { includeMetadataChanges: true },
+          (snapshot) => {
+            if (snapshot.metadata.hasPendingWrites) {
+              return;
+            }
+            onDocs(snapshot.docs.map((document) => ({
+              id: document.id, data: document.data(),
+            })));
+          },
           onError,
         );
       })
@@ -87,6 +93,11 @@ export class FirebaseEventsRemote implements EventsRemote {
     }
     await batch.commit();
     return id;
+  }
+
+  async remove(id: string): Promise<void> {
+    const { firestore, firestoreSdk } = await this.openFirebase();
+    await firestoreSdk.deleteDoc(firestoreSdk.doc(firestore, 'events', id));
   }
 
   private async openFirebase() {
