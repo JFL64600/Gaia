@@ -117,6 +117,8 @@ describe('App', () => {
     expect(search.value).toBe('');
     const id = TestBed.inject(EventStore).events()[0].id;
     expect(id).toMatch(/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/);
+    expect(compiled.querySelector<HTMLAnchorElement>('.event-link')?.getAttribute('href'))
+      .toBe(`/scores/events/${id}`);
     expect(compiled.textContent).not.toContain(id);
     expect(compiled.querySelector('.event-count')?.textContent).toContain('1 évènement');
     expect(TestBed.inject(EventStore).events()[0]).toMatchObject({

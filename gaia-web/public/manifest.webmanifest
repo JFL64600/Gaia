@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Gaia",
   "short_name": "Gaia",
-  "description": "Portail des outils GaiaRox et GaiaScores",
+  "description": "Portail des outils GaiaScores, AnddeXokoTxapelketa et GaiaRox",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

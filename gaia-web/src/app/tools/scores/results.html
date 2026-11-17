@@ -1,0 +1,74 @@
+<div class="app-shell">
+  <header class="gaia-header">
+    <div class="gaia-header-group">
+      <gaia-brand suffix="Scores" toolLink="/scores" />
+      @if (event(); as currentEvent) {
+        <span class="event-title">- {{ currentEvent.name }}</span>
+      }
+    </div>
+    <div class="gaia-header-controls"><gaia-preferences /></div>
+  </header>
+  <main class="content results-page">
+    @if (error(); as message) {
+      <p class="message error" role="alert">{{ message }}</p>
+    }
+    @if (eventLoading()) {
+      <p class="message" role="status">{{ i18n.t('results.loading') }}</p>
+    } @else if (event()) {
+      <nav class="tabs" [attr.aria-label]="i18n.t('results.title')">
+        <button type="button" [attr.aria-pressed]="section() === 'results'" (click)="section.set('results')">{{ i18n.t('results.title') }}</button>
+        <button type="button" [attr.aria-pressed]="section() === 'ranking'" (click)="section.set('ranking')">{{ i18n.t('results.ranking') }}</button>
+      </nav>
+      @if (section() === 'ranking') {
+        <p class="message" role="status">{{ i18n.t('results.rankingPending') }}</p>
+      } @else if (teamsLoading()) {
+        <p class="message" role="status">{{ i18n.t('results.loading') }}</p>
+      } @else {
+        @if (missingGames()) {
+          <p class="message error" role="alert">{{ i18n.t('results.noGames') }}</p>
+        }
+        @if (teams().length === 0 && !teamsError()) {
+          <p class="message">{{ i18n.t('results.empty') }}</p>
+        } @else {
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">{{ i18n.t('results.team') }}</th>
+                @for (game of games(); track game.code) {
+                  <th scope="col">{{ game.label }} <small>{{ i18n.t(game.role === 'Time' ? 'games.role.time' : 'games.role.point') }}</small></th>
+                }
+              </tr></thead>
+              <tbody>
+                @for (team of teams(); track team.id) {
+                  <tr>
+                    <th scope="row">{{ i18n.t('results.team') }} {{ team.name }}</th>
+                    @for (game of games(); track game.code) {
+                      <td [attr.data-label]="game.label + ' · ' + i18n.t(game.role === 'Time' ? 'games.role.time' : 'games.role.point')">
+                        @if (team.gameIds.includes(game.code)) {
+                          @if (mode.admin()) {
+                            <gaia-result-editor [eventId]="eventId()" [teamId]="team.id"
+                              [teamName]="i18n.t('results.team') + ' ' + team.name"
+                              [game]="game" [value]="team.scores[game.code] ?? null" />
+                          } @else {
+                            @if (team.scores[game.code] !== undefined) {
+                              {{ team.scores[game.code] }}
+                            } @else {
+                              <span class="empty-result" [attr.aria-label]="i18n.t('results.notEntered')">—</span>
+                            }
+                          }
+                        } @else {
+                          <span class="empty-result">—</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    } @else if (!error()) {
+      <p class="message" role="status">{{ i18n.t('results.missing') }}</p>
+    }
+  </main>
+</div>
